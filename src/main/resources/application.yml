@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: backend-for-e-commerce
+  
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    base-url: http://localhost:9411
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info,tracing
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
