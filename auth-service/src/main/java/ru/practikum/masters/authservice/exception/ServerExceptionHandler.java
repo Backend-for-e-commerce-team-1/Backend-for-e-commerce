@@ -58,5 +58,12 @@ public class ServerExceptionHandler {
                 "could not execute statement; ", LocalDateTime.now());
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleAuthenticationException(final AuthenticationException ex) {
+        return new ErrorResponse("UNAUTHORIZED", "Unauthorized",
+                "The client did not provide valid credentials or they were incorrect: " + ex, LocalDateTime.now());
+    }
+
 }
 
