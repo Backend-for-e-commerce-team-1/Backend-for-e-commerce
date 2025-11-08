@@ -47,7 +47,7 @@ public class ServerExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException ex) {
         return new ErrorResponse("BAD_REQUEST", "Validation failed for argument.",
-                ex.getMessage(), LocalDateTime.now());
+                ex.toString(), LocalDateTime.now());
     }
 
 
@@ -65,5 +65,12 @@ public class ServerExceptionHandler {
                 "The client did not provide valid credentials or they were incorrect: " + ex, LocalDateTime.now());
     }
 
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleJwtValidationException(final JwtValidationException ex) {
+        return new ErrorResponse("UNAUTHORIZED", "Unauthorized",
+                "JwtValidationException: " + ex.getMessage(), LocalDateTime.now());
+    }
 }
 

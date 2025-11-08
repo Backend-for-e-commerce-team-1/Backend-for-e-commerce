@@ -1,10 +1,11 @@
 package ru.practikum.masters.authservice.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.practikum.masters.authservice.exception.JwtValidationException;
 import ru.practikum.masters.authservice.model.User;
 
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 
 @Service
+@Slf4j
 public class JwtService {
 
     // TODO Наверное надо перенести в application.prop ?
@@ -68,16 +70,39 @@ public class JwtService {
 
     /**
      * Метод для валидации и парсинга токена
-     *
+     * В случае возникновения ошибок выбрасываем исключения
      * @param token - токен
      * @return - Claims
      */
+    //TODO Вероятно валидацию надо перенести в контроллеры?
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+        } catch (MalformedJwtException e) {
+            log.error("Невалидный формат JWT токена: {}", token);
+            throw new JwtValidationException("Невалидный формат токена", "TOKEN_INVALID_FORMAT");
+
+        } catch (ExpiredJwtException e) {
+            log.error("JWT токен истек: {}", token);
+            throw new JwtValidationException("Токен истек", "TOKEN_EXPIRED");
+
+        } catch (SecurityException e) {
+            log.error("Ошибка подписи JWT токена: {}", token);
+            throw new JwtValidationException("Неверная подпись токена", "TOKEN_INVALID_SIGNATURE");
+
+        } catch (JwtException e) {
+            log.error("Ошибка парсинга JWT токена: {}", e.getMessage());
+            throw new JwtValidationException("Ошибка валидации токена", "TOKEN_VALIDATION_ERROR");
+
+        } catch (IllegalArgumentException e) {
+            log.error("Пустой или null токен");
+            throw new JwtValidationException("Токен не может быть пустым", "TOKEN_EMPTY");
+        }
     }
 
 

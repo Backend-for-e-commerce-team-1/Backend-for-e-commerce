@@ -8,4 +8,10 @@ public class ParameterNotValidException extends IllegalArgumentException {
         this.parameter = parameter;
         this.reason = reason;
     }
+
+    @Override
+    public String getMessage() {
+        return String.format("Parameter '%s' is not valid: %s", parameter, reason);
+    }
+
 }

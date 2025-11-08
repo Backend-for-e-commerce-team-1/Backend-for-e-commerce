@@ -100,6 +100,7 @@ public class UserServiceImpl implements UserService {
      * @return UpdateUserResponseDto исправленный пользователь
      */
     //TODO Надо ли предусмотреть возможность смены пароля у пользователя?
+    //TODO Дата модификации = дата создания пользователя? Или надо хранить дату модификации в базе в отдельном поле?
     @Transactional
     @Override
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
@@ -116,7 +117,7 @@ public class UserServiceImpl implements UserService {
         //Меняем данные и сохраняем в базу
         User newUser = UserMapper.toUserFromUpdateDto(oldUser, updateUser);
         newUser.setUserId(oldUser.getUserId());
-        newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setCreatedAt(LocalDateTime.now()); //TODO Надо ли в базе обновлять дату создания? Или дату модификации хранить в отдельном поле?
 
         return UserMapper.toUpdateResponseFromUser(userRepository.save(newUser));
     }

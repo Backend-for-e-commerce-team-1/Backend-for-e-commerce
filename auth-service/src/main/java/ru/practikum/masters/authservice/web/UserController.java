@@ -58,19 +58,22 @@ public class UserController {
 
     /**
      * Извлекаем JWT токен из заголовка Authorization
+     *
      * @param authorizationHeader - заголовок в формате "Bearer {token}"
      * @return JWT токен без префикса "Bearer "
      * @throws IllegalArgumentException если заголовок невалидный
      */
     private String extractTokenFromHeader(String authorizationHeader) {
-        if (authorizationHeader == null) {
-            log.error("Заголовок авторизации (Authorization) отсутствует");
-            throw new ParameterNotValidException("Authorization","Заголовок авторизации отсутствует");
+        if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            log.error("Отсутствует заголовок авторизации Authorization: Bearer {token}");
+            throw new ParameterNotValidException("Authorization",
+                    "Отсутствует заголовок авторизации Authorization: Bearer {token}");
         }
 
         if (!authorizationHeader.startsWith("Bearer ")) {
-            log.error("Заголовок авторизации (Authorization) должен начинаться с 'Bearer '");
-            throw new ParameterNotValidException("Authorization","Заголовок авторизации должен начинаться с 'Bearer '");
+            log.error("Заголовок авторизации Authorization: Bearer {token} должен начинаться с 'Bearer '");
+            throw new ParameterNotValidException("Authorization",
+                    "ЗЗаголовок авторизации Authorization: Bearer {token} должен начинаться с 'Bearer '");
         }
 
         // Убираем "Bearer" и возвращаем только токен
