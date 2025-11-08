@@ -1,0 +1,202 @@
+{
+	"info": {
+		"_postman_id": "df94b806-190f-4e94-8b33-b4465aed52c1",
+		"name": "Auth user",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42491377",
+		"_collection_link": "https://speeding-resonance-461341.postman.co/workspace/e-commerce~f608a6af-c247-4b82-b98d-aec43c40f68b/collection/42491377-df94b806-190f-4e94-8b33-b4465aed52c1?action=share&source=collection_link&creator=42491377"
+	},
+	"item": [
+		{
+			"name": "addUser",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"username\": \"john_doe\",\r\n\"email\": \"john@example.com\",\r\n\"password\": \"StrongPassword123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users/register",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Auth",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"pm.collectionVariables.set(\"access_token\", jsonData.token);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"email\": \"john@example.com\",\r\n\"password\": \"StrongPassword123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users/login",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getUser",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/users/profile",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateUser",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"username\": \"john_doe_updated\",\r\n\"email\": \"john_new@example.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users/profile",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": ""
+		},
+		{
+			"key": "post-response",
+			"value": ""
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		}
+	]
+}
