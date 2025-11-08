@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DataConflictException;
+import ru.practikum.masters.authservice.exception.NotFoundException;
 import ru.practikum.masters.authservice.mapper.UserMapper;
 import ru.practikum.masters.authservice.model.User;
 import ru.practikum.masters.authservice.repository.UserRepository;
@@ -30,11 +31,17 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Регистрация пользователя в системе
+     *
+     * @param newUser новый пользователь
+     * @return UserDto пользователь
+     */
     @Override
     @Transactional
     public UserDto addUser(NewUserRequestDto newUser) {
         User user = UserMapper.toUserFromNewUser(newUser);
-        //Проверяем уникальность. Если нарушена - выбрасываем исключения и откатываемся
+        //Проверяем уникальность. Если нарушена - выбрасываем исключение
         emailUsageCheck(user.getEmail(), user.getUsername(), UUID.randomUUID());
         //Хэшируем пароль
         String hashedPassword = passwordEncoder.encode(newUser.getPassword());
@@ -47,6 +54,12 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(user);
     }
 
+    /**
+     * Аутентификация пользователя в системе
+     *
+     * @param authUserDto Email и пароль
+     * @return AuthUserResponseDto Токен и время его действия
+     */
     @Override
     public AuthUserResponseDto authUser(AuthUserRequestDto authUserDto) {
         User user = authenticate(authUserDto.getEmail(), authUserDto.getPassword());
@@ -63,22 +76,58 @@ public class UserServiceImpl implements UserService {
         return authUserResponseDto;
     }
 
+    /**
+     * Информация о пользователе по его токену.
+     * В процессе токен валидируется.
+     *
+     * @param token токен
+     * @return UserDto  пользователь
+     */
     @Override
     public UserDto getUser(String token) {
-        return null;
+        User userFromToken = jwtService.extractUserFromToken(token);
+        User user = userRepository.findById(userFromToken.getUserId())
+                .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
+                        + " не найден в системе"));
+        return UserMapper.toUserDto(user);
     }
 
+    /**
+     * Внесение изменений в пользователя
+     *
+     * @param updateUser что будет меняться
+     * @param token      токен
+     * @return UpdateUserResponseDto исправленный пользователь
+     */
+    //TODO Надо ли предусмотреть возможность смены пароля у пользователя?
+    @Transactional
     @Override
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
-        return null;
+        //Извлекаем пользователя из токена
+        User userFromToken = jwtService.extractUserFromToken(token);
+        //Находим пользователя в базе
+        User oldUser = userRepository.findById(userFromToken.getUserId())
+                .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
+                        + " не найден в системе"));
+
+        //Проверяем уникальность новых данных. Если нарушена - выбрасываем исключение
+        emailUsageCheck(updateUser.getEmail(), updateUser.getUsername(), oldUser.getUserId());
+
+        //Меняем данные и сохраняем в базу
+        User newUser = UserMapper.toUserFromUpdateDto(oldUser, updateUser);
+        newUser.setUserId(oldUser.getUserId());
+        newUser.setCreatedAt(LocalDateTime.now());
+
+        return UserMapper.toUpdateResponseFromUser(userRepository.save(newUser));
     }
 
     /**
      * Проверяем уникальность имени пользователя и эл.почты
-     * @param email - электронная почта пользователя
+     *
+     * @param email    - электронная почта пользователя
      * @param username - имя пользователя
-     * @param userId - id пользователя нужен для update пользователя,
-     *               что бы не проверять на уникальность самого себя
+     * @param userId   - id пользователя нужен для update пользователя,
+     *                 что бы не проверять на уникальность самого себя
      */
     private void emailUsageCheck(String email, String username, UUID userId) {
         List<User> users = new ArrayList<>(userRepository.findAll());
@@ -100,7 +149,7 @@ public class UserServiceImpl implements UserService {
      * Если совпадает, возвращаем пользователя.
      * Иначе выбрасываем ошибку AuthenticationException
      *
-     * @param email - почта
+     * @param email    - почта
      * @param password - пароль
      * @return User - пользователь
      */

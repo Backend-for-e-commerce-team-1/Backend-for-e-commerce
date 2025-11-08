@@ -1,5 +1,6 @@
 package ru.practikum.masters.authservice.service;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 @Service
@@ -31,7 +33,7 @@ public class JwtService {
 
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getUserId());
+        claims.put("userId", user.getUserId().toString());
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
 
@@ -47,5 +49,36 @@ public class JwtService {
     public Long getExpirationInSeconds() {
         return expiration;
     }
+
+    /**
+     * Проверяем токен и если он валидный,
+     * извлекаем информацию о пользователе
+     *
+     * @param token - string
+     * @return - User
+     */
+    public User extractUserFromToken(String token) {
+        User user = new User();
+        user.setUserId(UUID.fromString(extractAllClaims(token).get("userId", String.class)));
+        user.setEmail(extractAllClaims(token).get("email", String.class));
+        user.setUsername(extractAllClaims(token).get("username", String.class));
+
+        return user;
+    }
+
+    /**
+     * Метод для валидации и парсинга токена
+     *
+     * @param token - токен
+     * @return - Claims
+     */
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
 
 }

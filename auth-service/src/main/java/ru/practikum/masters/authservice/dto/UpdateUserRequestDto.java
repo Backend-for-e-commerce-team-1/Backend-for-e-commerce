@@ -23,4 +23,12 @@ public class UpdateUserRequestDto {
     @Email
     private String email;
 
+    public boolean hasUsername() {
+        return !(username == null || username.isBlank());
+    }
+
+    public boolean hasEmail() {
+        return !(email == null || email.isBlank());
+    }
+
 }

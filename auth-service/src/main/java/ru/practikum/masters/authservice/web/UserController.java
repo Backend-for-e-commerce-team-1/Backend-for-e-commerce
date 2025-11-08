@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practikum.masters.authservice.dto.*;
+import ru.practikum.masters.authservice.exception.ParameterNotValidException;
 import ru.practikum.masters.authservice.service.UserService;
 
 @RestController
@@ -37,7 +38,7 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public UserDto getUser(@RequestHeader(name = "Authorization") String authToken) {
+    public UserDto getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
         log.info("Поступил запрос GET: /users/profile");
         String token = extractTokenFromHeader(authToken);
         UserDto userDto = userService.getUser(token);
@@ -63,13 +64,13 @@ public class UserController {
      */
     private String extractTokenFromHeader(String authorizationHeader) {
         if (authorizationHeader == null) {
-            log.error("Заголовок авторизации отсутствует");
-            throw new IllegalArgumentException("Заголовок авторизации отсутствует");
+            log.error("Заголовок авторизации (Authorization) отсутствует");
+            throw new ParameterNotValidException("Authorization","Заголовок авторизации отсутствует");
         }
 
         if (!authorizationHeader.startsWith("Bearer ")) {
-            log.error("Заголовок авторизации должен начинаться с 'Bearer '");
-            throw new IllegalArgumentException("Заголовок авторизации должен начинаться с 'Bearer '");
+            log.error("Заголовок авторизации (Authorization) должен начинаться с 'Bearer '");
+            throw new ParameterNotValidException("Authorization","Заголовок авторизации должен начинаться с 'Bearer '");
         }
 
         // Убираем "Bearer" и возвращаем только токен
