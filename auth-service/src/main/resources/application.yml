@@ -15,8 +15,8 @@ spring:
       mode: always
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/bc
-    username: postgres
-    password: root
+    url: jdbc:postgresql://localhost:5432/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 

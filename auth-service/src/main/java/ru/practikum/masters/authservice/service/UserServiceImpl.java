@@ -2,7 +2,6 @@ package ru.practikum.masters.authservice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     /**
      * Регистрация пользователя в системе
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto addUser(NewUserRequestDto newUser) {
-        User user = UserMapper.toUserFromNewUser(newUser);
+        User user = userMapper.toUserFromNewUser(newUser);
         //Проверяем уникальность. Если нарушена - выбрасываем исключение
         emailUsageCheck(user.getEmail(), user.getUsername(), UUID.randomUUID());
         //Хэшируем пароль
@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
         //Сохраняем в базе
         user = userRepository.save(user);
         //Возвращаем нового пользователя
-        return UserMapper.toUserDto(user);
+        return userMapper.toUserDto(user);
     }
 
     /**
@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
-        return UserMapper.toUserDto(user);
+        return userMapper.toUserDto(user);
     }
 
     /**
@@ -104,6 +104,7 @@ public class UserServiceImpl implements UserService {
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
         //Извлекаем пользователя из токена
         User userFromToken = jwtService.extractUserFromToken(token);
+
         //Находим пользователя в базе
         User oldUser = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
@@ -112,12 +113,14 @@ public class UserServiceImpl implements UserService {
         //Проверяем уникальность новых данных. Если нарушена - выбрасываем исключение
         emailUsageCheck(updateUser.getEmail(), updateUser.getUsername(), oldUser.getUserId());
 
-        //Меняем данные и сохраняем в базу
-        User newUser = UserMapper.toUserFromUpdateDto(oldUser, updateUser);
-        newUser.setUserId(oldUser.getUserId());
-        newUser.setCreatedAt(LocalDateTime.now()); //TODO Надо ли в базе обновлять дату создания? Или дату модификации хранить в отдельном поле?
+        // Обновляем данные пользователя из DTO
+        userMapper.updateUserFromDto(updateUser, oldUser);
 
-        return UserMapper.toUpdateResponseFromUser(userRepository.save(newUser));
+        // Сохраняем обновленного пользователя
+        User updatedUser = userRepository.save(oldUser);
+        UpdateUserResponseDto updateUserResponseDto = userMapper.toUpdateResponseFromUser(updatedUser);
+        updateUserResponseDto.setUpdatedAt(LocalDateTime.now());
+        return updateUserResponseDto;
     }
 
     /**

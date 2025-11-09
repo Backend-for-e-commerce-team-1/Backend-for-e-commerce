@@ -11,66 +11,89 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class ServerExceptionHandler {
 
-    // Обработка NotFoundException
-    @ExceptionHandler(NotFoundException.class)
+    /**
+     * Группа: Ошибки "Не найдено"
+     *
+     * @param ex RuntimeException
+     * @return ErrorResponse
+     */
+    @ExceptionHandler({
+            NotFoundException.class,
+            RequestNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFoundException(NotFoundException ex) {
+    public ErrorResponse handleNotFoundExceptions(RuntimeException ex) {
         return new ErrorResponse("NOT_FOUND", "The required object was not found.",
-                "Ресурс не найден; " + ex.getMessage(), LocalDateTime.now());
+                getNotFoundMessage(ex), LocalDateTime.now());
     }
 
-    // Обработка RequestNotFoundException
-    @ExceptionHandler(RequestNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleRequestNotFoundException(RequestNotFoundException ex) {
-        return new ErrorResponse("NOT_FOUND", "The required object was not found.",
-                "Запрос не найден; " + ex.getMessage(), LocalDateTime.now());
-    }
-
-    // Обработка конфликтов данных
-    @ExceptionHandler(DataConflictException.class)
+    /**
+     * Группа: Конфликты данных и ограничения БД
+     *
+     * @param ex RuntimeException
+     * @return ErrorResponse
+     */
+    @ExceptionHandler({
+            DataConflictException.class,
+            ConstraintViolationException.class
+    })
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleDataConflictException(DataConflictException ex) {
+    public ErrorResponse handleDataConflictExceptions(RuntimeException ex) {
+        String details = ex instanceof DataConflictException ?
+                "could not execute statement; " + ex.getMessage() :
+                "could not execute statement; ";
         return new ErrorResponse("CONFLICT", "Integrity constraint has been violated.",
-                "could not execute statement; " + ex.getMessage(), LocalDateTime.now());
+                details, LocalDateTime.now());
     }
 
-    // Обработка валидации параметров
-    @ExceptionHandler
+    /**
+     * Группа: Ошибки валидации
+     *
+     * @param ex Exception
+     * @return ErrorResponse
+     */
+    @ExceptionHandler({
+            ParameterNotValidException.class,
+            MethodArgumentNotValidException.class
+    })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleParameterNotValid(final ParameterNotValidException ex) {
+    public ErrorResponse handleValidationExceptions(Exception ex) {
+        String message = ex instanceof ParameterNotValidException ?
+                ex.getMessage() :
+                "Validation failed for argument.";
         return new ErrorResponse("BAD_REQUEST", "Incorrectly made request.",
-                ex.getMessage(), LocalDateTime.now());
+                message, LocalDateTime.now());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException ex) {
-        return new ErrorResponse("BAD_REQUEST", "Validation failed for argument.",
-                ex.toString(), LocalDateTime.now());
-    }
-
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException ex) {
-        return new ErrorResponse("CONFLICT", "Integrity constraint has been violated.",
-                "could not execute statement; ", LocalDateTime.now());
-    }
-
-    @ExceptionHandler
+    /**
+     * Группа: Ошибки аутентификации и авторизации
+     *
+     * @param ex RuntimeException
+     * @return ErrorResponse
+     */
+    @ExceptionHandler({
+            AuthenticationException.class,
+            JwtValidationException.class
+    })
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleAuthenticationException(final AuthenticationException ex) {
-        return new ErrorResponse("UNAUTHORIZED", "Unauthorized",
-                "The client did not provide valid credentials or they were incorrect: " + ex, LocalDateTime.now());
+    public ErrorResponse handleAuthExceptions(RuntimeException ex) {
+        String details = ex instanceof JwtValidationException ?
+                "JwtValidationException: " + ex.getMessage() :
+                "The client did not provide valid credentials or they were incorrect: " + ex.getMessage();
+        return new ErrorResponse("UNAUTHORIZED", "Unauthorized", details, LocalDateTime.now());
     }
 
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleJwtValidationException(final JwtValidationException ex) {
-        return new ErrorResponse("UNAUTHORIZED", "Unauthorized",
-                "JwtValidationException: " + ex.getMessage(), LocalDateTime.now());
+    /**
+     * Вспомогательный метод для формирования сообщений "Не найдено"
+     *
+     * @param ex RuntimeException
+     * @return String
+     */
+    private String getNotFoundMessage(RuntimeException ex) {
+        if (ex instanceof RequestNotFoundException) {
+            return "Запрос не найден; " + ex.getMessage();
+        }
+        return "Ресурс не найден; " + ex.getMessage();
     }
 }
 

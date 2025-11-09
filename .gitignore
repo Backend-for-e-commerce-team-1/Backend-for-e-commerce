@@ -1,3 +1,5 @@
 .idea
 .vs_code
+auth-service/.env
+application-local.yml
 .env

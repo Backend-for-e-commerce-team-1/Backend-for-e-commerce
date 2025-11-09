@@ -71,6 +71,7 @@ public class JwtService {
     /**
      * Метод для валидации и парсинга токена
      * В случае возникновения ошибок выбрасываем исключения
+     *
      * @param token - токен
      * @return - Claims
      */
@@ -104,6 +105,4 @@ public class JwtService {
             throw new JwtValidationException("Токен не может быть пустым", "TOKEN_EMPTY");
         }
     }
-
-
 }

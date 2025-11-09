@@ -17,6 +17,7 @@ import ru.practikum.masters.authservice.service.UserService;
 @Validated
 public class UserController {
 
+    private static final int BEARER_PREFIX_LENGTH = "Bearer ".length();
     private final UserService userService;
 
 
@@ -77,7 +78,7 @@ public class UserController {
         }
 
         // Убираем "Bearer" и возвращаем только токен
-        return authorizationHeader.substring(7);
+        return authorizationHeader.substring(BEARER_PREFIX_LENGTH);
     }
 
 }
