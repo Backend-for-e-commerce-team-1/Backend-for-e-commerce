@@ -1,0 +1,95 @@
+services:
+  grafana:
+    build: './config/grafana'
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      monitoring:
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/prometheus
+    networks:
+      monitoring:
+
+  auth-service:
+    build: auth-service
+    ports:
+      - "8000:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      monitoring:
+
+  auth-db:
+    image: postgres:16.1
+    container_name: auth-db
+    networks:
+      monitoring:
+    ports:
+      - "2432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
+
+  order-service:
+    build: order-service
+    ports:
+      - "8001:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://order-db:5432/order
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      monitoring:
+
+  order-db:
+    image: postgres:16.1
+    container_name: order-db
+    networks:
+      monitoring:
+    ports:
+      - "3432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=order
+
+  goods-service:
+    build: goods-service
+    ports:
+      - "8002:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://goods-db:5432/goods
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      monitoring:
+
+  goods-db:
+    image: postgres:16.1
+    container_name: goods-db
+    networks:
+      monitoring:
+    ports:
+      - "4432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=goods
+
+networks:
+  monitoring:
+    driver: bridge

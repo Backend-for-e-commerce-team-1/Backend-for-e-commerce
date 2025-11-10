@@ -1,0 +1,6 @@
+scrape_configs:
+  - job_name: 'goods_service_monitoring'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['goods_service:8080']
