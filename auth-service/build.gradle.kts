@@ -34,14 +34,16 @@ checkstyle {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("io.opentelemetry:opentelemetry-api")
+	implementation("io.opentelemetry:opentelemetry-sdk")
+	implementation("io.opentelemetry:opentelemetry-exporter-logging")
+	implementation("io.micrometer:micrometer-tracing-bridge-otel")
+	implementation("io.micrometer:micrometer-observation")
 	compileOnly("org.projectlombok:lombok")
-	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -63,5 +65,4 @@ tasks.register("checkstyleAll") {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
-	dependsOn("checkstyleMain") // Проверка кода перед тестами
 }

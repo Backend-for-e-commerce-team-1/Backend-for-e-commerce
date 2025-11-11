@@ -1,6 +1,6 @@
 spring:
   application:
-    name: auth-service
+    name: goods-service
 
 management:
   tracing:
@@ -10,9 +10,9 @@ management:
       type: w3c
 
   endpoints:
-   web:
-    exposure:
-     include: health, metrics, info
+    web:
+      exposure:
+        include: health, metrics, info
 
 opentelemetry:
   exporter:
@@ -27,4 +27,4 @@ logging:
     org.springframework.web: DEBUG
 
 server:
-  port: 8083
+  port: 8082
