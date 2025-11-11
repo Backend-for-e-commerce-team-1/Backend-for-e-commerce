@@ -1,7 +1,4 @@
 plugins {
-    java
-    id("org.springframework.boot") version "3.5.7"
-    id("io.spring.dependency-management") version "1.1.7"
 	java
 	id("org.springframework.boot") version "3.5.7"
 	id("io.spring.dependency-management") version "1.1.7"
@@ -32,7 +29,7 @@ repositories {
 checkstyle {
 	toolVersion = "10.12.5"
 	configFile = file("${rootDir}/checkstyle.xml")
-	isIgnoreFailures = false
+    isIgnoreFailures = false
 	maxWarnings = 0
 }
 
