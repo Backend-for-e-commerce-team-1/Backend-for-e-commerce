@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: goods-postgres
+    environment:
+      POSTGRES_DB: goodsdb
+      POSTGRES_USER: goods
+      POSTGRES_PASSWORD: goods
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_goods:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U goods -d goodsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  goods-service:
+    build:
+      context: ./goods-service
+      dockerfile: Dockerfile
+    container_name: goods-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/goodsdb
+      SPRING_DATASOURCE_USERNAME: goods
+      SPRING_DATASOURCE_PASSWORD: goods
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_PORT: 4569
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4569:4569"
+    restart: unless-stopped
+
+volumes:
+  pgdata_goods:
