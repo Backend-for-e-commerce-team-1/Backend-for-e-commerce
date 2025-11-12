@@ -70,7 +70,7 @@ services:
   goods-service:
     build: goods-service
     ports:
-      - "8002:8080"
+      - "8002:8082"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://goods-db:5432/goods
       - SPRING_DATASOURCE_USERNAME=postgres
