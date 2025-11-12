@@ -46,7 +46,7 @@ public class Product {
     @JoinColumn(nullable = false)
     private Brand brand;
 
-    @Column(columnDefinition = "jsonb")
+//    @Column(columnDefinition = "jsonb")
     private List<String> imageUrls;
 
     public static Product create(String code, String name, String description, BigDecimal price, Category category, Brand brand, List<String> imageUrls) {

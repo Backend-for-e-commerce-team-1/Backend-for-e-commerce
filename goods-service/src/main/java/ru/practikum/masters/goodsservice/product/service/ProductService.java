@@ -2,7 +2,6 @@ package ru.practikum.masters.goodsservice.product.service;
 
 import ru.practikum.masters.goodsservice.product.dto.*;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
@@ -14,5 +13,5 @@ public interface ProductService {
 
     ProductListResponse search(ProductSearchRequest request);
 
-    ProductDeleteResponce delete(UUID id);
+    ProductDeleteResponse delete(UUID id);
 }

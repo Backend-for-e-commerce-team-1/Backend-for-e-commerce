@@ -3,8 +3,8 @@ package ru.practikum.masters.goodsservice.product.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +20,6 @@ import ru.practikum.masters.goodsservice.product.dto.*;
 import ru.practikum.masters.goodsservice.product.mapper.ProductMapper;
 import ru.practikum.masters.goodsservice.product.model.Product;
 import ru.practikum.masters.goodsservice.product.repository.ProductRepository;
-import ru.practikum.masters.goodsservice.product.spec.ProductSearchSpecification;
 import ru.practikum.masters.goodsservice.product.spec.ProductSpecification;
 import ru.practikum.masters.goodsservice.common.exception.NotFoundException;
 import ru.practikum.masters.goodsservice.common.exception.ValidationException;
@@ -33,7 +32,6 @@ public class ProductServiceImpl implements ProductService{
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final ProductSpecification specification;
-    private final ProductSearchSpecification productSearchSpecification;
     private final PageableFactory pageableFactory;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
@@ -43,7 +41,6 @@ public class ProductServiceImpl implements ProductService{
     public ProductCreateResponse create(ProductRequest productRequest) {
         final String tag = "ProductServiceImpl.create";
         log.debug("{}: Enter with params: productRequest={}", tag, productRequest);
-        try {
             Category category;
             if (productRequest.getCategoryId() != null) {
                 category = categoryRepository.findById(productRequest.getCategoryId())
@@ -81,22 +78,17 @@ public class ProductServiceImpl implements ProductService{
             Product product = productMapper.toEntity(productRequest, category, brand);
             log.debug("{}: Mapped entity: {}", tag, product);
             product = productRepository.save(product);
-            log.info("{}: Successfully created product, id={}", tag, product.getId());
 
             ProductCreateResponse response = productMapper.toShortResponse(product.getId(), "Product created successfully.");
             log.debug("{}: Exit with result: {}", tag, response);
+            log.info("{}: Successfully created product, id={}", tag, product.getId());
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public ProductListResponse getProducts(ProductFilterRequest filterRequest) {
         final String tag = "ProductServiceImpl.getProducts";
         log.debug("{}: Enter with params: filterRequest={}", tag, filterRequest);
-        try {
             Pageable pageable = pageableFactory.createFromFilter(filterRequest);
             log.debug("{}: Resolved pageable: pageNumber={}, pageSize={}", tag, pageable.getPageNumber(), pageable.getPageSize());
             Specification<Product> spec = specification.buildFromFilter(filterRequest);
@@ -106,17 +98,12 @@ public class ProductServiceImpl implements ProductService{
             ProductListResponse response = productMapper.toProductListResponse(productPage, filterRequest);
             log.debug("{}: Exit with result page size={}", tag, productPage.getContent().size());
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public ProductDetailResponse get(UUID id) {
         final String tag = "ProductServiceImpl.get";
         log.debug("{}: Enter with params: id={}", tag, id);
-        try {
             Product product = productRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - product id={}", tag, id);
@@ -125,57 +112,29 @@ public class ProductServiceImpl implements ProductService{
             ProductDetailResponse response = productMapper.toDetailResponse(product);
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public ProductListResponse search(ProductSearchRequest request) {
         final String tag = "ProductServiceImpl.search";
         log.debug("{}: Enter with params: request={}", tag, request);
-        try {
-            List<String> fields = request.getFields();
-            String query = request.getQuery();
-            if (fields == null || fields.isEmpty()) {
-                throw new ValidationException("fields parameter is required and must be non-empty");
-            }
-            java.util.Set<String> allowed = java.util.Set.of("code", "brand", "name");
-            java.util.Set<String> fieldSet;
-            if (fields.size() == 1 && fields.get(0) != null && fields.get(0).contains(",")) {
-                fieldSet = java.util.Arrays.stream(fields.get(0).split(","))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .collect(java.util.stream.Collectors.toSet());
-            } else {
-                fieldSet = new java.util.HashSet<>(fields);
-            }
-            fieldSet = fieldSet.stream().map(String::toLowerCase).collect(java.util.stream.Collectors.toSet());
-            if (!allowed.containsAll(fieldSet)) {
-                throw new ValidationException("fields must be subset of: code, brand, name");
-            }
+            Specification<Product> spec = specification.search(request)
+                    .and(specification.buildFromFilter(request));
+
             Pageable pageable = pageableFactory.createFromFilter(request);
             log.debug("{}: Resolved pageable: pageNumber={}, pageSize={}", tag, pageable.getPageNumber(), pageable.getPageSize());
-            Specification<Product> spec = productSearchSpecification.searchByFields(query, fieldSet)
-                    .and(specification.buildFromFilter(request));
             Page<Product> productPage = productRepository.findAll(spec, pageable);
             log.info("{}: Fetched search products page, totalElements={}", tag, productPage.getTotalElements());
             ProductListResponse response = productMapper.toProductListResponse(productPage, request);
             log.debug("{}: Exit with result page size={}", tag, productPage.getContent().size());
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     @Transactional
-    public ProductDeleteResponce delete(UUID id) {
+    public ProductDeleteResponse delete(UUID id) {
         final String tag = "ProductServiceImpl.delete";
         log.debug("{}: Enter with params: id={}", tag, id);
-        try {
             Product product = productRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - product id={}", tag, id);
@@ -183,16 +142,12 @@ public class ProductServiceImpl implements ProductService{
                     });
             productRepository.delete(product);
             log.info("{}: Product deleted, id={}", tag, product.getId());
-            ProductDeleteResponce response = ProductDeleteResponce.builder()
+            ProductDeleteResponse response = ProductDeleteResponse.builder()
                     .message("Product deleted successfully")
                     .status("DELETED")
                     .id(product.getId())
                     .build();
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 }

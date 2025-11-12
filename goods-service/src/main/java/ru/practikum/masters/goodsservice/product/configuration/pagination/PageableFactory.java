@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ru.practikum.masters.goodsservice.product.dto.ProductFilterRequest;
+import ru.practikum.masters.goodsservice.product.dto.ProductSearchRequest;
 import ru.practikum.masters.goodsservice.common.exception.ValidationException;
 
 import java.util.ArrayList;
@@ -23,33 +24,32 @@ public class PageableFactory {
     public Pageable createFromFilter(ProductFilterRequest filter) {
         final String tag = "PageableFactory.createFromFilter";
         log.debug("{}: Enter with params: filter={}", tag, filter);
-        try {
-            validatePaginationParams(filter);
+        validatePaginationParams(filter);
 
-            int offset = filter.getOffset() != null ? filter.getOffset() : 0;
-            int limit = filter.getLimit() != null ?
-                    Math.min(filter.getLimit(), paginationProperties.getMaxPageSize()) :
-                    paginationProperties.getDefaultPageSize();
-            log.debug("{}: Calculated offset={}, limit={}", tag, offset, limit);
+        int offset = filter.getOffset() != null ? filter.getOffset() : 0;
+        int limit = filter.getLimit() != null ?
+                Math.min(filter.getLimit(), paginationProperties.getMaxPageSize()) :
+                paginationProperties.getDefaultPageSize();
+        log.debug("{}: Calculated offset={}, limit={}", tag, offset, limit);
 
-            int pageNumber = (filter.getPage() != null && filter.getPage() > 0)
-                    ? filter.getPage() - 1
-                    : calculatePageNumber(offset, limit);
-            log.debug("{}: Calculated pageNumber={}", tag, pageNumber);
+        int pageNumber = (filter.getPage() != null && filter.getPage() > 0)
+                ? filter.getPage() - 1
+                : calculatePageNumber(offset, limit);
+        log.debug("{}: Calculated pageNumber={}", tag, pageNumber);
 
-            Sort sort = createSort(filter.getSort());
-            log.debug("{}: Created sort={}", tag, sort);
+        Sort sort = createSort(filter.getSort());
+        log.debug("{}: Created sort={}", tag, sort);
 
-            Pageable pageable = sort != null
-                    ? PageRequest.of(pageNumber, limit, sort)
-                    : PageRequest.of(pageNumber, limit);
-            log.info("{}: Pageable created successfully", tag);
-            log.debug("{}: Exit with result: {}", tag, pageable);
-            return pageable;
-        } catch (RuntimeException e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
+        Pageable pageable = sort != null
+                ? PageRequest.of(pageNumber, limit, sort)
+                : PageRequest.of(pageNumber, limit);
+        log.info("{}: Pageable created successfully", tag);
+        log.debug("{}: Exit with result: {}", tag, pageable);
+        return pageable;
+    }
+
+    public Pageable createFromSearch(ProductSearchRequest request) {
+        return createFromFilter(request);
     }
 
     private int calculatePageNumber(int offset, int limit) {
@@ -84,18 +84,13 @@ public class PageableFactory {
 
     private Sort parseAliasSort(String sortParam) {
         String p = sortParam.trim().toLowerCase();
-        switch (p) {
-            case "price_asc":
-                return Sort.by(Sort.Order.asc("price"));
-            case "price_desc":
-                return Sort.by(Sort.Order.desc("price"));
-            case "name_asc":
-                return Sort.by(Sort.Order.asc("name"));
-            case "name_desc":
-                return Sort.by(Sort.Order.desc("name"));
-            default:
-                return null;
-        }
+        return switch (p) {
+            case "price_asc" -> Sort.by(Sort.Order.asc("price"));
+            case "price_desc" -> Sort.by(Sort.Order.desc("price"));
+            case "name_asc" -> Sort.by(Sort.Order.asc("name"));
+            case "name_desc" -> Sort.by(Sort.Order.desc("name"));
+            default -> null;
+        };
     }
 
     private Sort.Order parseSortExpression(String expression) {

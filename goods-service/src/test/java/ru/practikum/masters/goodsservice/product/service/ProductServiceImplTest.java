@@ -3,8 +3,6 @@ package ru.practikum.masters.goodsservice.product.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -23,7 +21,6 @@ import ru.practikum.masters.goodsservice.product.dto.*;
 import ru.practikum.masters.goodsservice.product.mapper.ProductMapper;
 import ru.practikum.masters.goodsservice.product.model.Product;
 import ru.practikum.masters.goodsservice.product.repository.ProductRepository;
-import ru.practikum.masters.goodsservice.product.spec.ProductSearchSpecification;
 import ru.practikum.masters.goodsservice.product.spec.ProductSpecification;
 
 import java.math.BigDecimal;
@@ -44,7 +41,6 @@ class ProductServiceImplTest {
     @Mock private ProductRepository productRepository;
     @Mock private ProductMapper productMapper;
     @Mock private ProductSpecification specification;
-    @Mock private ProductSearchSpecification productSearchSpecification;
     @Mock private PageableFactory pageableFactory;
     @Mock private CategoryRepository categoryRepository;
     @Mock private BrandRepository brandRepository;
@@ -57,7 +53,6 @@ class ProductServiceImplTest {
                 productRepository,
                 productMapper,
                 specification,
-                productSearchSpecification,
                 pageableFactory,
                 categoryRepository,
                 brandRepository
@@ -249,7 +244,7 @@ class ProductServiceImplTest {
         when(pageableFactory.createFromFilter(request)).thenReturn(pageable);
 
         Specification<Product> searchSpec = (root, q, cb) -> null;
-        when(productSearchSpecification.searchByFields(eq("ace"), any(Set.class))).thenReturn(searchSpec);
+        when(specification.search(any(ProductSearchRequest.class))).thenReturn(searchSpec);
         when(specification.buildFromFilter(request)).thenReturn((root, q, cb) -> null);
 
         Page<Product> page = new PageImpl<>(List.of(), pageable, 0);
@@ -274,6 +269,7 @@ class ProductServiceImplTest {
         request.setQuery("q");
         request.setFields(List.of("invalid"));
 
+        when(specification.search(any(ProductSearchRequest.class))).thenThrow(new ValidationException("invalid fields"));
         assertThrows(ValidationException.class, () -> service.search(request));
         verifyNoInteractions(productRepository);
     }
@@ -284,6 +280,7 @@ class ProductServiceImplTest {
         request.setQuery("q");
         request.setFields(List.of());
 
+        when(specification.search(any(ProductSearchRequest.class))).thenThrow(new ValidationException("empty fields"));
         assertThrows(ValidationException.class, () -> service.search(request));
         verifyNoInteractions(productRepository);
     }
@@ -295,7 +292,7 @@ class ProductServiceImplTest {
         product.setId(id);
         when(productRepository.findById(id)).thenReturn(Optional.of(product));
 
-        ProductDeleteResponce resp = service.delete(id);
+        ProductDeleteResponse resp = service.delete(id);
         assertThat(resp.getId()).isEqualTo(id);
         assertThat(resp.getMessage()).isEqualTo("Product deleted successfully");
         assertThat(resp.getStatus()).isEqualTo("DELETED");

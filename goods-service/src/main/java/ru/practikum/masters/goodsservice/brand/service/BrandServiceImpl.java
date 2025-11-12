@@ -31,7 +31,6 @@ public class BrandServiceImpl implements BrandService {
     public BrandResponse create(BrandRequest request) {
         final String tag = "BrandServiceImpl.create";
         log.debug("{}: Enter with params: request={}", tag, request);
-        try {
             if (brandRepository.existsByNameIgnoreCase(request.getName())) {
                 log.error("{}: Conflict - brand name exists: {}", tag, request.getName());
                 throw new ConflictException("Brand with the same name already exists");
@@ -43,32 +42,22 @@ public class BrandServiceImpl implements BrandService {
             BrandResponse response = brandMapper.toResponse(brand);
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public Page<BrandResponse> list(Pageable pageable) {
         final String tag = "BrandServiceImpl.list";
         log.debug("{}: Enter with params: pageable={}", tag, pageable);
-        try {
             Page<BrandResponse> page = brandRepository.findAll(pageable).map(brandMapper::toResponse);
             log.info("{}: Fetched brands page, totalElements={}", tag, page.getTotalElements());
             log.debug("{}: Exit with result page size={}", tag, page.getContent().size());
             return page;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public BrandResponse get(UUID id) {
         final String tag = "BrandServiceImpl.get";
         log.debug("{}: Enter with params: id={}", tag, id);
-        try {
             Brand brand = brandRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - brand id={}", tag, id);
@@ -78,10 +67,6 @@ public class BrandServiceImpl implements BrandService {
             log.info("{}: Brand fetched, id={}", tag, brand.getId());
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
@@ -89,7 +74,6 @@ public class BrandServiceImpl implements BrandService {
     public BrandResponse update(UUID id, BrandRequest request) {
         final String tag = "BrandServiceImpl.update";
         log.debug("{}: Enter with params: id={}, request={}", tag, id, request);
-        try {
             Brand brand = brandRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - brand id={}", tag, id);
@@ -102,10 +86,6 @@ public class BrandServiceImpl implements BrandService {
             BrandResponse response = brandMapper.toResponse(brand);
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
@@ -113,7 +93,6 @@ public class BrandServiceImpl implements BrandService {
     public void delete(UUID id) {
         final String tag = "BrandServiceImpl.delete";
         log.debug("{}: Enter with params: id={}", tag, id);
-        try {
             Brand brand = brandRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - brand id={}", tag, id);
@@ -128,9 +107,5 @@ public class BrandServiceImpl implements BrandService {
             brandRepository.delete(brand);
             log.info("{}: Brand deleted, id={}", tag, brand.getId());
             log.debug("{}: Exit without result (void)", tag);
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
 }
 }

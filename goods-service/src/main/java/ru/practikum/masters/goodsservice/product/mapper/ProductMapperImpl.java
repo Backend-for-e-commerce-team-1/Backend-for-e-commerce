@@ -18,7 +18,6 @@ public class ProductMapperImpl implements ProductMapper{
     public ProductResponse toResponse(Product entity) {
         final String tag = "ProductMapperImpl.toResponse";
         log.debug("{}: Enter with params: entity={}", tag, entity);
-        try {
             ProductResponse response = ProductResponse.builder()
                     .productId(entity.getId())
                     .code(entity.getCode())
@@ -31,17 +30,12 @@ public class ProductMapperImpl implements ProductMapper{
             log.info("{}: Product mapped to response: name={}", tag, response.getName());
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public ProductDetailResponse toDetailResponse(Product entity) {
         final String tag = "ProductMapperImpl.toDetailResponse";
         log.debug("{}: Enter with params: entity={}", tag, entity);
-        try {
             ProductDetailResponse response = ProductDetailResponse.builder()
                     .productId(entity.getId())
                     .code(entity.getCode())
@@ -55,17 +49,12 @@ public class ProductMapperImpl implements ProductMapper{
             log.info("{}: Product mapped to detail response: name={}", tag, response.getName());
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public Product toEntity(ProductRequest request, Category category, Brand brand) {
         final String tag = "ProductMapperImpl.toEntity";
         log.debug("{}: Enter with params: request={}, category={}, brand={} ", tag, request, category, brand);
-        try {
             Product product = Product.create(
                     request.getCode(),
                     request.getName(),
@@ -78,10 +67,6 @@ public class ProductMapperImpl implements ProductMapper{
             log.info("{}: Product entity created: name={}", tag, product.getName());
             log.debug("{}: Exit with result: {}", tag, product);
             return product;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
 
@@ -89,7 +74,6 @@ public class ProductMapperImpl implements ProductMapper{
     public ProductListResponse toProductListResponse(Page<Product> productPage, ProductFilterRequest filter) {
         final String tag = "ProductMapperImpl.toProductListResponse";
         log.debug("{}: Enter with params: pageTotal={}, filter={}", tag, productPage.getTotalElements(), filter);
-        try {
             List<ProductResponse> productResponses = productPage.getContent().stream()
                     .map(this::toResponse)
                     .toList();
@@ -106,10 +90,6 @@ public class ProductMapperImpl implements ProductMapper{
             log.info("{}: Product list response created", tag);
             log.debug("{}: Exit with result: productsCount={}", tag, result.getProducts().size());
             return result;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override

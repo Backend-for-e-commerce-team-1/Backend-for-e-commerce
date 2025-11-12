@@ -31,7 +31,6 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse create(CategoryRequest request) {
         final String tag = "CategoryServiceImpl.create";
         log.debug("{}: Enter with params: request={}", tag, request);
-        try {
             if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
                 log.error("{}: Conflict - category name exists: {}", tag, request.getName());
                 throw new ConflictException("Category with the same name already exists");
@@ -43,32 +42,22 @@ public class CategoryServiceImpl implements CategoryService {
             CategoryResponse response = categoryMapper.toResponse(category);
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public Page<CategoryResponse> list(Pageable pageable) {
         final String tag = "CategoryServiceImpl.list";
         log.debug("{}: Enter with params: pageable={}", tag, pageable);
-        try {
             Page<CategoryResponse> page = categoryRepository.findAll(pageable).map(categoryMapper::toResponse);
             log.info("{}: Fetched categories page, totalElements={}", tag, page.getTotalElements());
             log.debug("{}: Exit with result page size={}", tag, page.getContent().size());
             return page;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
     public CategoryResponse get(UUID id) {
         final String tag = "CategoryServiceImpl.get";
         log.debug("{}: Enter with params: id={}", tag, id);
-        try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - category id={}", tag, id);
@@ -78,10 +67,6 @@ public class CategoryServiceImpl implements CategoryService {
             log.info("{}: Category fetched, id={}", tag, category.getId());
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
@@ -89,7 +74,6 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse update(UUID id, CategoryRequest request) {
         final String tag = "CategoryServiceImpl.update";
         log.debug("{}: Enter with params: id={}, request={}", tag, id, request);
-        try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - category id={}", tag, id);
@@ -102,10 +86,6 @@ public class CategoryServiceImpl implements CategoryService {
             CategoryResponse response = categoryMapper.toResponse(category);
             log.debug("{}: Exit with result: {}", tag, response);
             return response;
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
     }
 
     @Override
@@ -113,7 +93,6 @@ public class CategoryServiceImpl implements CategoryService {
     public void delete(UUID id) {
         final String tag = "CategoryServiceImpl.delete";
         log.debug("{}: Enter with params: id={}", tag, id);
-        try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> {
                         log.error("{}: NotFound - category id={}", tag, id);
@@ -128,9 +107,5 @@ public class CategoryServiceImpl implements CategoryService {
             categoryRepository.delete(category);
             log.info("{}: Category deleted, id={}", tag, category.getId());
             log.debug("{}: Exit without result (void)", tag);
-        } catch (Exception e) {
-            log.error("{}: Error - {}", tag, e.getMessage());
-            throw e;
-        }
 }
 }

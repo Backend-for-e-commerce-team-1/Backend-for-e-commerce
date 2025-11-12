@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practikum.masters.goodsservice.common.exception.BaseServiceException;
@@ -34,11 +33,5 @@ public class GlobalExceptionHandler {
                 "error", errorMessage
         ));
         return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest request) {
-        ApiError body = ApiError.of(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", request.getRequestURI(), Map.of());
-        return ResponseEntity.internalServerError().body(body);
     }
 }

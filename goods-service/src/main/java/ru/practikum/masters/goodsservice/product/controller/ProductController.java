@@ -11,7 +11,7 @@ import ru.practikum.masters.goodsservice.product.dto.ProductFilterRequest;
 import ru.practikum.masters.goodsservice.product.dto.ProductSearchRequest;
 import ru.practikum.masters.goodsservice.product.dto.ProductListResponse;
 import ru.practikum.masters.goodsservice.product.dto.ProductDetailResponse;
-import ru.practikum.masters.goodsservice.product.dto.ProductDeleteResponce;
+import ru.practikum.masters.goodsservice.product.dto.ProductDeleteResponse;
 import ru.practikum.masters.goodsservice.product.service.ProductService;
 
 @RestController
@@ -37,7 +37,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ProductDeleteResponce delete(@PathVariable UUID id) {
+    public ProductDeleteResponse delete(@PathVariable UUID id) {
         return productService.delete(id);
     }
 }

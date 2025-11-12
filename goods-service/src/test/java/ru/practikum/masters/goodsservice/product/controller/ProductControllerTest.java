@@ -81,7 +81,7 @@ class ProductControllerTest {
         mockMvc.perform(get("/products/" + id)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.product_id", is(id.toString())))
+                .andExpect(jsonPath("$.productId", is(id.toString())))
                 .andExpect(jsonPath("$.name", is("Phone")))
                 .andExpect(jsonPath("$.code", is("C-1")));
     }
@@ -143,7 +143,7 @@ class ProductControllerTest {
     @Test
     void delete_returns204NoBody() throws Exception {
         UUID id = UUID.randomUUID();
-        given(productService.delete(eq(id))).willReturn(ProductDeleteResponce.builder()
+        given(productService.delete(eq(id))).willReturn(ProductDeleteResponse.builder()
                 .message("Product deleted successfully")
                 .status("DELETED")
                 .id(id)

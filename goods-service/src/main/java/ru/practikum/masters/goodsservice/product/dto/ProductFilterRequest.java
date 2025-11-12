@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
+import java.math.BigDecimal;
 
 @Data
 public class ProductFilterRequest {
@@ -20,10 +21,10 @@ public class ProductFilterRequest {
     private String category;
 
     @PositiveOrZero(message = "priceMin must be zero or positive")
-    private Double priceMin;
+    private BigDecimal priceMin;
 
     @PositiveOrZero(message = "priceMax must be zero or positive")
-    private Double priceMax;
+    private BigDecimal priceMax;
 
     private String brand;
 
@@ -32,6 +33,6 @@ public class ProductFilterRequest {
         if (priceMin == null || priceMax == null) {
             return true;
         }
-        return Double.compare(priceMin, priceMax) <= 0;
+        return priceMin.compareTo(priceMax) <= 0;
     }
 }

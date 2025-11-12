@@ -2,7 +2,6 @@ package ru.practikum.masters.goodsservice.product.spec;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -81,7 +80,7 @@ class ProductSpecificationTest {
     void buildFromFilter_priceMinOnly_returnsPredicate() {
         ProductSpecification specBuilder = new ProductSpecification();
         ProductFilterRequest filter = new ProductFilterRequest();
-        filter.setPriceMin(10.0);
+        filter.setPriceMin(new java.math.BigDecimal("10.0"));
         filter.setPriceMax(null);
 
         Path<Object> pricePath = Mockito.mock(Path.class);
