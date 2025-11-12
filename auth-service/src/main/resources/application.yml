@@ -20,3 +20,29 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
+
+  endpoints:
+   web:
+    exposure:
+     include: health, metrics, info
+
+opentelemetry:
+  exporter:
+    logging:
+      enabled: true
+  sdk:
+    enabled: true
+
+logging:
+  level:
+    io.opentelemetry.exporter.logging: DEBUG
+    org.springframework.web: DEBUG
+
+server:
+  port: 8083
