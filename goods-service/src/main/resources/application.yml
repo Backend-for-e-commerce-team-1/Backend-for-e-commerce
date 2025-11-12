@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 4569
 
 spring:
   application:
@@ -11,6 +11,18 @@ management:
       probability: 1.0
     propagation:
       type: w3c
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/goodsdb}
+    username: ${SPRING_DATASOURCE_USERNAME:goods}
+    password: ${SPRING_DATASOURCE_PASSWORD:goods}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
 
   endpoints:
     web:
