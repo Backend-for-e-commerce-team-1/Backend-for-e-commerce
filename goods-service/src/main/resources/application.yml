@@ -1,11 +1,17 @@
 server:
-  port: 8080
+  port: 8082
 
 spring:
   application:
     name: goods-service
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
+
   endpoints:
     web:
       exposure:
@@ -18,3 +24,16 @@ management:
     metrics:
       export:
         enabled: true
+        include: health, metrics, info
+
+opentelemetry:
+  exporter:
+    logging:
+      enabled: true
+  sdk:
+    enabled: true
+
+logging:
+  level:
+    io.opentelemetry.exporter.logging: DEBUG
+    org.springframework.web: DEBUG
