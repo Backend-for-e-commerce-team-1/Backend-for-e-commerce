@@ -2,6 +2,15 @@ server:
   port: 4569
 
 spring:
+  application:
+    name: goods-service
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/goodsdb}
     username: ${SPRING_DATASOURCE_USERNAME:goods}
@@ -14,3 +23,29 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
+
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        include: health, metrics, info
+
+opentelemetry:
+  exporter:
+    logging:
+      enabled: true
+  sdk:
+    enabled: true
+
+logging:
+  level:
+    io.opentelemetry.exporter.logging: DEBUG
+    org.springframework.web: DEBUG

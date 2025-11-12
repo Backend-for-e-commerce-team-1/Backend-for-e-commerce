@@ -1,41 +1,113 @@
 version: '3.9'
 
 services:
-  postgres:
-    image: postgres:16
-    container_name: goods-postgres
-    environment:
-      POSTGRES_DB: goodsdb
-      POSTGRES_USER: goods
-      POSTGRES_PASSWORD: goods
+  grafana:
+    build: './config/grafana'
     ports:
-      - "5432:5432"
+      - "3000:3000"
     volumes:
-      - pgdata_goods:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U goods -d goodsdb"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/prometheus
+    networks:
+      - monitoring
+
+  auth-service:
+    build: auth-service
+    ports:
+      - "8000:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      - monitoring
+    depends_on:
+      - auth-db
+
+  auth-db:
+    image: postgres:16.1
+    container_name: auth-db
+    ports:
+      - "2432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
+    networks:
+      - monitoring
+
+  order-service:
+    build: order-service
+    ports:
+      - "8001:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://order-db:5432/order
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      - monitoring
+    depends_on:
+      - order-db
+
+  order-db:
+    image: postgres:16.1
+    container_name: order-db
+    ports:
+      - "3432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=order
+    networks:
+      - monitoring
 
   goods-service:
     build:
       context: ./goods-service
       dockerfile: Dockerfile
     container_name: goods-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/goodsdb
-      SPRING_DATASOURCE_USERNAME: goods
-      SPRING_DATASOURCE_PASSWORD: goods
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SERVER_PORT: 4569
-    depends_on:
-      postgres:
-        condition: service_healthy
     ports:
       - "4569:4569"
-    restart: unless-stopped
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://goods-db:5432/goods
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SERVER_PORT=4569
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - goods-db
+    networks:
+      - monitoring
+
+  goods-db:
+    image: postgres:16.1
+    container_name: goods-db
+    ports:
+      - "4432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=goods
+    networks:
+      - monitoring
+    volumes:
+      - pgdata_goods:/var/lib/postgresql/data
+
+networks:
+  monitoring:
+    driver: bridge
 
 volumes:
   pgdata_goods:
