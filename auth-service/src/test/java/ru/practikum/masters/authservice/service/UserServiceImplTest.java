@@ -3,6 +3,7 @@ package ru.practikum.masters.authservice.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -11,6 +12,7 @@ import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DataConflictException;
 import ru.practikum.masters.authservice.exception.NotFoundException;
+import ru.practikum.masters.authservice.mapper.UserMapper;
 import ru.practikum.masters.authservice.model.User;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
@@ -36,21 +38,24 @@ class UserServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    private UserMapper userMapper = Mappers.getMapper(UserMapper.class);
+
     @InjectMocks
     private UserServiceImpl userService;
 
     private User user;
-    private UserDto userDto;
-    private NewUserRequestDto newUserRequestDto;
+    private RegisterResponse registerResponse;
+    private RegisterRequest newUserRequestDto;
 
     private final UUID userId = UUID.randomUUID();
     private final LocalDateTime createdAt = LocalDateTime.now();
 
     @BeforeEach
     void setUp() {
-        user = new User(userId, "john_doe", "john@example.com", "StrongPassword123", createdAt);
-        newUserRequestDto = new NewUserRequestDto("john_doe", "john@example.com", "StrongPassword123");
-        userDto = new UserDto(userId, "john_doe", "john@example.com", createdAt);
+        user = new User(userId, "john_doe", "john@example.com", "StrongPassword123", createdAt, createdAt.plusHours(1));
+        newUserRequestDto = new RegisterRequest("john_doe", "john@example.com", "StrongPassword123");
+        registerResponse = new RegisterResponse(userId, "john_doe", "john@example.com", createdAt);
+        userService = new UserServiceImpl(userRepository, jwtService, passwordEncoder, userMapper);
     }
 
 
@@ -76,16 +81,16 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Вызов тестируемого метода - регистрация нового пользователя
-        UserDto result = userService.addUser(newUserRequestDto);
+        RegisterResponse result = userService.registerUser(newUserRequestDto);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
         // - Сравниваем все поля возвращенного DTO с ожидаемыми значениями
         assertNotNull(result);
-        assertEquals(userDto.getUserId(), result.getUserId());
-        assertEquals(userDto.getUsername(), result.getUsername());
-        assertEquals(userDto.getEmail(), result.getEmail());
-        assertEquals(userDto.getCreatedAt(), result.getCreatedAt());
+        assertEquals(registerResponse.getUserId(), result.getUserId());
+        assertEquals(registerResponse.getUsername(), result.getUsername());
+        assertEquals(registerResponse.getEmail(), result.getEmail());
+        assertEquals(registerResponse.getCreatedAt(), result.getCreatedAt());
 
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что пароль был зашифрован ровно один раз
@@ -109,7 +114,8 @@ class UserServiceImplTest {
                 "different_user",
                 "john@example.com", // Тот же email, что и у нового пользователя
                 "AnotherPassword123",
-                LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().minusDays(1).plusHours(1)
         );
 
         // Настройка поведения мок-объекта репозитория:
@@ -119,7 +125,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке регистрации выбрасывается исключение
         DataConflictException exception = assertThrows(
                 DataConflictException.class,
-                () -> userService.addUser(newUserRequestDto)
+                () -> userService.registerUser(newUserRequestDto)
         );
 
         // Проверяем сообщение об ошибке
@@ -146,7 +152,8 @@ class UserServiceImplTest {
                 "john_doe", // Тот же username, что и у нового пользователя
                 "different@example.com",
                 "AnotherPassword123",
-                LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().minusDays(1).plusHours(1)
         );
 
         // Настройка поведения мок-объекта репозитория:
@@ -156,7 +163,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке регистрации выбрасывается исключение
         DataConflictException exception = assertThrows(
                 DataConflictException.class,
-                () -> userService.addUser(newUserRequestDto)
+                () -> userService.registerUser(newUserRequestDto)
         );
 
         // Проверяем сообщение об ошибке
@@ -183,7 +190,8 @@ class UserServiceImplTest {
                 "john_doe", // Тот же username
                 "john@example.com", // Тот же email
                 "AnotherPassword123",
-                LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().minusDays(1).plusHours(1)
         );
 
         // Настройка поведения мок-объекта репозитория:
@@ -193,7 +201,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке регистрации выбрасывается исключение
         DataConflictException exception = assertThrows(
                 DataConflictException.class,
-                () -> userService.addUser(newUserRequestDto)
+                () -> userService.registerUser(newUserRequestDto)
         );
 
         // Проверяем, что исключение связано с email
@@ -307,16 +315,16 @@ class UserServiceImplTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Вызов тестируемого метода - получение информации о пользователе по токену
-        UserDto result = userService.getUser(validToken);
+        RegisterResponse result = userService.getUser(validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
         // - Сравниваем все поля возвращенного DTO с ожидаемыми значениями
         assertNotNull(result);
-        assertEquals(userDto.getUserId(), result.getUserId());
-        assertEquals(userDto.getUsername(), result.getUsername());
-        assertEquals(userDto.getEmail(), result.getEmail());
-        assertEquals(userDto.getCreatedAt(), result.getCreatedAt());
+        assertEquals(registerResponse.getUserId(), result.getUserId());
+        assertEquals(registerResponse.getUsername(), result.getUsername());
+        assertEquals(registerResponse.getEmail(), result.getEmail());
+        assertEquals(registerResponse.getCreatedAt(), result.getCreatedAt());
 
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что извлечение пользователя из токена было вызвано один раз
@@ -420,7 +428,8 @@ class UserServiceImplTest {
                 "other_user",
                 "existing@example.com", // Email, который уже используется
                 "Password123",
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                LocalDateTime.now().plusHours(1)
         );
 
         // Настройка поведения мок-объектов:

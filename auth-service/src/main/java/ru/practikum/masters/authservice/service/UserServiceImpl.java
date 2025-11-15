@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
-import ru.practikum.masters.authservice.exception.DataConflictException;
+import ru.practikum.masters.authservice.exception.DuplicateUserException;
 import ru.practikum.masters.authservice.exception.NotFoundException;
 import ru.practikum.masters.authservice.mapper.UserMapper;
 import ru.practikum.masters.authservice.model.User;
@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public UserDto addUser(NewUserRequestDto newUser) {
+    public RegisterResponse registerUser(RegisterRequest newUser) {
         User user = userMapper.toUserFromNewUser(newUser);
         //Проверяем уникальность. Если нарушена - выбрасываем исключение
         emailUsageCheck(user.getEmail(), user.getUsername(), UUID.randomUUID());
@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
      * @return UserDto  пользователь
      */
     @Override
-    public UserDto getUser(String token) {
+    public RegisterResponse getUser(String token) {
         User userFromToken = jwtService.extractUserFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
@@ -97,8 +97,6 @@ public class UserServiceImpl implements UserService {
      * @param token      токен
      * @return UpdateUserResponseDto исправленный пользователь
      */
-    //TODO Надо ли предусмотреть возможность смены пароля у пользователя?
-    //TODO Дата модификации = дата создания пользователя? Или надо хранить дату модификации в базе в отдельном поле?
     @Transactional
     @Override
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
@@ -115,11 +113,12 @@ public class UserServiceImpl implements UserService {
 
         // Обновляем данные пользователя из DTO
         userMapper.updateUserFromDto(updateUser, oldUser);
-
+        LocalDateTime updateAt = LocalDateTime.now(); // Дата и время обновления пользователя
+        oldUser.setUpdatedAt(updateAt);
         // Сохраняем обновленного пользователя
         User updatedUser = userRepository.save(oldUser);
         UpdateUserResponseDto updateUserResponseDto = userMapper.toUpdateResponseFromUser(updatedUser);
-        updateUserResponseDto.setUpdatedAt(LocalDateTime.now());
+        updateUserResponseDto.setUpdatedAt(updateAt);
         return updateUserResponseDto;
     }
 
@@ -136,11 +135,11 @@ public class UserServiceImpl implements UserService {
         for (User user : users) {
             if (!userId.equals(user.getUserId()) && user.getEmail().equals(email)) {
                 log.error("Email {} уже используется в системе другим пользователем.", email);
-                throw new DataConflictException("Email " + email + " уже используется в системе другим пользователем.");
+                throw new DuplicateUserException("Email " + email + " уже используется в системе другим пользователем.");
             }
             if (!userId.equals(user.getUserId()) && user.getUsername().equals(username)) {
                 log.error("Имя пользователя {} уже используется в системе другим пользователем.", username);
-                throw new DataConflictException("Имя пользователя " + username + " уже используется в системе другим пользователем.");
+                throw new DuplicateUserException("Имя пользователя " + username + " уже используется в системе другим пользователем.");
             }
         }
     }
