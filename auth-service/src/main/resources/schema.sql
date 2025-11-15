@@ -3,18 +3,9 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL
 );
-
-
--- drop index idx_users_username;
--- drop index idx_users_email;
--- drop index idx_users_created_at;
-
--- CREATE INDEX idx_users_username ON users(username);
--- CREATE INDEX idx_users_email ON users(email);
--- CREATE INDEX idx_users_created_at ON users(created_at);
-
 
 COMMENT ON TABLE users IS 'Пользователи';
 COMMENT ON COLUMN users.user_id IS 'Уникальный идентификатор пользователя (UUID)';
@@ -22,3 +13,7 @@ COMMENT ON COLUMN users.username IS 'Имя пользователя (уника
 COMMENT ON COLUMN users.email IS 'Электронная почта пользователя (уникальная)';
 COMMENT ON COLUMN users.password IS 'Хэш пароля пользователя';
 COMMENT ON COLUMN users.created_at IS 'Дата и время создания записи';
+COMMENT ON COLUMN users.updated_at IS 'Дата и время изменения пользователя';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique ON users(username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email);
