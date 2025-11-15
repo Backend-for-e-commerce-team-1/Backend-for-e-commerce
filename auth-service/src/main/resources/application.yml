@@ -46,3 +46,10 @@ logging:
 
 server:
   port: 8083
+
+app:
+  admin:
+    auto-create: true
+    password: "${ADMIN_PASSWORD}"
+    username: "Administrator"
+    email: "admin@e-commerce.com"
