@@ -4,11 +4,11 @@ import ru.practikum.masters.authservice.dto.*;
 
 public interface UserService {
 
-    UserDto addUser(NewUserRequestDto newUser);
+    RegisterResponse registerUser(RegisterRequest newUser);
 
     AuthUserResponseDto authUser(AuthUserRequestDto authUserDto);
 
-    UserDto getUser(String token);
+    RegisterResponse getUser(String token);
 
     UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token);
 

@@ -35,7 +35,8 @@ public class ServerExceptionHandler {
      */
     @ExceptionHandler({
             DataConflictException.class,
-            ConstraintViolationException.class
+            ConstraintViolationException.class,
+            DuplicateUserException.class
     })
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataConflictExceptions(RuntimeException ex) {
