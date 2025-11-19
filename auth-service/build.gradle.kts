@@ -34,22 +34,23 @@ checkstyle {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.postgresql:postgresql")
-    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
-    compileOnly("org.projectlombok:lombok")
-    runtimeOnly("org.postgresql:postgresql")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
-    annotationProcessor("org.projectlombok:lombok")
-    implementation("org.mapstruct:mapstruct:1.5.5.Final")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation(":global-exceptions")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.postgresql:postgresql")
+	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	compileOnly("org.projectlombok:lombok")
+	runtimeOnly("org.postgresql:postgresql")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+	annotationProcessor("org.projectlombok:lombok")
+	implementation("org.mapstruct:mapstruct:1.5.5.Final")
+	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.security:spring-security-test")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("io.opentelemetry:opentelemetry-api")
@@ -61,6 +62,7 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 }
 
 // Настройка отчетов Checkstyle

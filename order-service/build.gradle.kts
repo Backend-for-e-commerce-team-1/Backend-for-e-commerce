@@ -28,6 +28,7 @@ checkstyle {
 }
 
 dependencies {
+    implementation(":global-exceptions")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.opentelemetry:opentelemetry-api")
