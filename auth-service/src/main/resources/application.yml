@@ -59,3 +59,11 @@ app:
       expiration: 3600
 
     public-endpoints: "/users/register,/users/login"
+
+  liquibase:
+    change-log: classpath:db/changelog/changelog-master.xml
+    enabled: true
+    drop-first: false
+  sql:
+    init:
+      mode: never  # Отключаем автоматическое выполнение schema.sql
