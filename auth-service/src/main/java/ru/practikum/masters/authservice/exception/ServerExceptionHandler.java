@@ -74,11 +74,11 @@ public class ServerExceptionHandler {
      */
     @ExceptionHandler({
             AuthenticationException.class,
-            JwtValidationException.class
+            InvalidCredentialsException.class
     })
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleAuthExceptions(RuntimeException ex) {
-        String details = ex instanceof JwtValidationException ?
+        String details = ex instanceof InvalidCredentialsException ?
                 "JwtValidationException: " + ex.getMessage() :
                 "The client did not provide valid credentials or they were incorrect: " + ex.getMessage();
         return new ErrorResponse("UNAUTHORIZED", "Unauthorized", details, LocalDateTime.now());
