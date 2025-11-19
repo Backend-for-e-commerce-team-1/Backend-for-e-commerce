@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'java-library'
+    id 'maven-publish'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -24,7 +25,6 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation project ':global-exceptions'
     implementation 'org.springframework:spring-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.slf4j:slf4j-api'
@@ -38,14 +38,26 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter'
 }
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'ru.practicum.masters'
+            artifactId = 'global-exceptions'
+            version = '1.0.0'
+        }
+    }
+}
+
+tasks.register("installToLocalRepo") {
+    dependsOn("publishToMavenLocal")
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }
 
-bootJar {
-    enabled = false
-}
-
 jar {
     enabled = true
+    archiveBaseName = 'global-exceptions'
 }
