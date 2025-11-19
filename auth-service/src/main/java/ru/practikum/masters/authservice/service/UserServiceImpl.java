@@ -25,7 +25,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -59,17 +59,17 @@ public class UserServiceImpl implements UserService {
      * @return AuthUserResponseDto Токен и время его действия
      */
     @Override
-    public AuthUserResponseDto authUser(AuthUserRequestDto authUserDto) {
+    public LoginResponse authenticate(LoginRequest authUserDto) {
         User user = authenticate(authUserDto.getEmail(), authUserDto.getPassword());
 
         // Генерируем JWT токен
-        String token = jwtService.generateToken(user);
-        Long expiresIn = jwtService.getExpirationInSeconds();
+        String token = jwtTokenProvider.generateToken(user);
+        Long expiresIn = jwtTokenProvider.getExpirationInSeconds();
 
         // Собираем ответ
-        AuthUserResponseDto authUserResponseDto = new AuthUserResponseDto();
+        LoginResponse authUserResponseDto = new LoginResponse();
         authUserResponseDto.setToken(token);
-        authUserResponseDto.setExpires_in(expiresIn);
+        authUserResponseDto.setExpiresIn(expiresIn);
 
         return authUserResponseDto;
     }
@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public RegisterResponse getUser(String token) {
-        User userFromToken = jwtService.extractUserFromToken(token);
+        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
         //Извлекаем пользователя из токена
-        User userFromToken = jwtService.extractUserFromToken(token);
+        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
 
         //Находим пользователя в базе
         User oldUser = userRepository.findById(userFromToken.getUserId())

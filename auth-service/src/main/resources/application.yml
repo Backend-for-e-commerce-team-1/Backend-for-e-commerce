@@ -28,9 +28,9 @@ management:
       type: w3c
 
   endpoints:
-   web:
-    exposure:
-     include: health, metrics, info
+    web:
+      exposure:
+        include: health, metrics, info
 
 opentelemetry:
   exporter:
@@ -53,3 +53,9 @@ app:
     password: "${ADMIN_PASSWORD}"
     username: "Administrator"
     email: "admin@e-commerce.com"
+  security:
+    jwt:
+      secretKey: c0382cfa-92ca-4c88-8c67-17f5e60dd71c
+      expiration: 3600
+
+    public-endpoints: "/users/register,/users/login"

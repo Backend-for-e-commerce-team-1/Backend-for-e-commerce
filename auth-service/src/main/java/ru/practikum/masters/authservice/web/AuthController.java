@@ -31,9 +31,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthUserResponseDto authUser(@RequestBody @Valid AuthUserRequestDto authUser) {
+    public LoginResponse authUser(@RequestBody @Valid LoginRequest authUser) {
         log.info("Поступил запрос POST: /users/login на аутентификацию пользователя: {}.", authUser.getEmail());
-        AuthUserResponseDto responseDto = userService.authUser(authUser);
+        LoginResponse responseDto = userService.authenticate(authUser);
         log.info("Пользователь {} успешно прошел аутентификацию в системе.", authUser.getEmail());
         return responseDto;
     }

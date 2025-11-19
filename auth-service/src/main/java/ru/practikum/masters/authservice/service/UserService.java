@@ -6,7 +6,7 @@ public interface UserService {
 
     RegisterResponse registerUser(RegisterRequest newUser);
 
-    AuthUserResponseDto authUser(AuthUserRequestDto authUserDto);
+    LoginResponse authenticate(LoginRequest authUserDto);
 
     RegisterResponse getUser(String token);
 

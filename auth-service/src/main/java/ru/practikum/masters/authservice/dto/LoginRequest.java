@@ -11,7 +11,7 @@ import org.hibernate.validator.constraints.Length;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthUserRequestDto {
+public class LoginRequest {
 
     @Length(min = 6, max = 255)
     @NotBlank
