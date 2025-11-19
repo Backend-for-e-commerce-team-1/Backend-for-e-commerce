@@ -5,17 +5,21 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.practikum.masters.authservice.model.User;
-import ru.practikum.masters.authservice.service.JwtService;
+import ru.practikum.masters.authservice.service.JwtTokenProvider;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Component
@@ -23,7 +27,14 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final int BEARER_PREFIX_LENGTH = "Bearer ".length();
-    private final JwtService jwtService;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    private final RestTemplateBuilder restTemplateBuilder;
+
+    @Value("${spring.security.public-endpoints}")
+    private String[] publicEndpoints;
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -54,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = authHeader.substring(BEARER_PREFIX_LENGTH);
 
             // Извлекаем пользователя из токена
-            User user = jwtService.extractUserFromToken(jwt);
+            User user = jwtTokenProvider.getUsernameFromToken(jwt);
 
             // Создаем объект аутентификации для Spring Security
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -78,7 +89,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Является ли endpoint публичным
+     * Список публичных endpoints лежит в файле application.yaml
+     *
+     * @param path String
+     * @return boolean
+     */
     private boolean isPublicEndpoint(String path) {
-        return path.equals("/users/register") || path.equals("/users/login");
+        return Arrays.stream(publicEndpoints)
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
+
 }

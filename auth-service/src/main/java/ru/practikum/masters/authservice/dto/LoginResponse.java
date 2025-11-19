@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthUserResponseDto {
+public class LoginResponse {
 
     private String token;
-    private Long expires_in;
+    private Long expiresIn;
 }
