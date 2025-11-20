@@ -15,7 +15,7 @@ import ru.practikum.masters.authservice.service.UserService;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-public class UserController {
+public class AuthController {
 
     private static final int BEARER_PREFIX_LENGTH = "Bearer ".length();
     private final UserService userService;
@@ -23,28 +23,28 @@ public class UserController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto addUser(@RequestBody @Valid NewUserRequestDto newUser) {
+    public RegisterResponse addUser(@RequestBody @Valid RegisterRequest newUser) {
         log.info("Поступил запрос POST: /users/register на добавление пользователя: {}.", newUser);
-        UserDto userDto = userService.addUser(newUser);
-        log.info("Пользователь {} успешно зарегистрирован в системе.", userDto);
-        return userDto;
+        RegisterResponse registerResponse = userService.registerUser(newUser);
+        log.info("Пользователь {} успешно зарегистрирован в системе.", registerResponse);
+        return registerResponse;
     }
 
     @PostMapping("/login")
-    public AuthUserResponseDto authUser(@RequestBody @Valid AuthUserRequestDto authUser) {
+    public LoginResponse authUser(@RequestBody @Valid LoginRequest authUser) {
         log.info("Поступил запрос POST: /users/login на аутентификацию пользователя: {}.", authUser.getEmail());
-        AuthUserResponseDto responseDto = userService.authUser(authUser);
+        LoginResponse responseDto = userService.authenticate(authUser);
         log.info("Пользователь {} успешно прошел аутентификацию в системе.", authUser.getEmail());
         return responseDto;
     }
 
     @GetMapping("/profile")
-    public UserDto getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
+    public RegisterResponse getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
         log.info("Поступил запрос GET: /users/profile");
         String token = extractTokenFromHeader(authToken);
-        UserDto userDto = userService.getUser(token);
-        log.info("Профиль пользователя {} найден в системе.", userDto.getEmail());
-        return userDto;
+        RegisterResponse registerResponse = userService.getUser(token);
+        log.info("Профиль пользователя {} найден в системе.", registerResponse.getEmail());
+        return registerResponse;
     }
 
     @PutMapping("/profile")
