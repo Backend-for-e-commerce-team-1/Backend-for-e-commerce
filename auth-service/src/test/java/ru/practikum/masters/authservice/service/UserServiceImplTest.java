@@ -13,7 +13,10 @@ import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DuplicateUserException;
 import ru.practikum.masters.authservice.exception.NotFoundException;
 import ru.practikum.masters.authservice.mapper.UserMapper;
+import ru.practikum.masters.authservice.model.Role;
+import ru.practikum.masters.authservice.model.RoleType;
 import ru.practikum.masters.authservice.model.User;
+import ru.practikum.masters.authservice.repository.RoleRepository;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -38,24 +41,31 @@ class UserServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private RoleRepository roleRepository;
+
     private UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
     @InjectMocks
     private UserServiceImpl userService;
 
     private User user;
-    private RegisterResponse registerResponse;
+    private UserDetails userDetails;
     private RegisterRequest newUserRequestDto;
 
     private final UUID userId = UUID.randomUUID();
+    private final UUID roleId = UUID.randomUUID();
     private final LocalDateTime createdAt = LocalDateTime.now();
+
+    private final Role role = new Role(roleId, RoleType.ROLE_USER);
 
     @BeforeEach
     void setUp() {
-        user = new User(userId, "john_doe", "john@example.com", "StrongPassword123", createdAt, createdAt.plusHours(1));
+        user = new User(userId, "john_doe", "john@example.com", "StrongPassword123", createdAt, createdAt.plusHours(1),
+                List.of(role));
         newUserRequestDto = new RegisterRequest("john_doe", "john@example.com", "StrongPassword123");
-        registerResponse = new RegisterResponse(userId, "john_doe", "john@example.com", createdAt);
-        userService = new UserServiceImpl(userRepository, jwtTokenProvider, passwordEncoder, userMapper);
+        userDetails = new UserDetails(userId, "john_doe", "john@example.com", createdAt, null, List.of(role));
+        userService = new UserServiceImpl(userRepository, roleRepository, jwtTokenProvider, passwordEncoder, userMapper);
     }
 
 
@@ -78,6 +88,7 @@ class UserServiceImplTest {
         // - При вызове шифрования пароля возвращаем исходный пароль (для упрощения теста)
         // - При сохранении пользователя в репозитории возвращаем сохраненного пользователя
         when(passwordEncoder.encode(anyString())).thenReturn("StrongPassword123");
+        when(roleRepository.findByRoleName(RoleType.ROLE_USER)).thenReturn(Optional.of(role));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Вызов тестируемого метода - регистрация нового пользователя
@@ -87,10 +98,10 @@ class UserServiceImplTest {
         // - Убеждаемся, что результат не null
         // - Сравниваем все поля возвращенного DTO с ожидаемыми значениями
         assertNotNull(result);
-        assertEquals(registerResponse.getUserId(), result.getUserId());
-        assertEquals(registerResponse.getUsername(), result.getUsername());
-        assertEquals(registerResponse.getEmail(), result.getEmail());
-        assertEquals(registerResponse.getCreatedAt(), result.getCreatedAt());
+        assertEquals(userDetails.getUserId(), result.getUserId());
+        assertEquals(userDetails.getUsername(), result.getUsername());
+        assertEquals(userDetails.getEmail(), result.getEmail());
+        assertEquals(userDetails.getCreatedAt(), result.getCreatedAt());
 
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что пароль был зашифрован ровно один раз
@@ -115,7 +126,8 @@ class UserServiceImplTest {
                 "john@example.com", // Тот же email, что и у нового пользователя
                 "AnotherPassword123",
                 LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().minusDays(1).plusHours(1)
+                LocalDateTime.now().minusDays(1).plusHours(1),
+                List.of(role)
         );
 
         // Настройка поведения мок-объекта репозитория:
@@ -153,7 +165,8 @@ class UserServiceImplTest {
                 "different@example.com",
                 "AnotherPassword123",
                 LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().minusDays(1).plusHours(1)
+                LocalDateTime.now().minusDays(1).plusHours(1),
+                List.of(role)
         );
 
         // Настройка поведения мок-объекта репозитория:
@@ -191,7 +204,8 @@ class UserServiceImplTest {
                 "john@example.com", // Тот же email
                 "AnotherPassword123",
                 LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().minusDays(1).plusHours(1)
+                LocalDateTime.now().minusDays(1).plusHours(1),
+                List.of(role)
         );
 
         // Настройка поведения мок-объекта репозитория:
@@ -315,16 +329,16 @@ class UserServiceImplTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Вызов тестируемого метода - получение информации о пользователе по токену
-        RegisterResponse result = userService.getUser(validToken);
+        UserDetails result = userService.getUser(validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
         // - Сравниваем все поля возвращенного DTO с ожидаемыми значениями
         assertNotNull(result);
-        assertEquals(registerResponse.getUserId(), result.getUserId());
-        assertEquals(registerResponse.getUsername(), result.getUsername());
-        assertEquals(registerResponse.getEmail(), result.getEmail());
-        assertEquals(registerResponse.getCreatedAt(), result.getCreatedAt());
+        assertEquals(userDetails.getUserId(), result.getUserId());
+        assertEquals(userDetails.getUsername(), result.getUsername());
+        assertEquals(userDetails.getEmail(), result.getEmail());
+        assertEquals(userDetails.getCreatedAt(), result.getCreatedAt());
 
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что извлечение пользователя из токена было вызвано один раз
@@ -429,7 +443,8 @@ class UserServiceImplTest {
                 "existing@example.com", // Email, который уже используется
                 "Password123",
                 LocalDateTime.now(),
-                LocalDateTime.now().plusHours(1)
+                LocalDateTime.now().plusHours(1),
+                List.of(role)
         );
 
         // Настройка поведения мок-объектов:

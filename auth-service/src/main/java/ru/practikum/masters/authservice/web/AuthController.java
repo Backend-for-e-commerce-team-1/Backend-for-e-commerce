@@ -39,12 +39,12 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public RegisterResponse getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
+    public UserDetails getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
         log.info("Поступил запрос GET: /users/profile");
         String token = extractTokenFromHeader(authToken);
-        RegisterResponse registerResponse = userService.getUser(token);
-        log.info("Профиль пользователя {} найден в системе.", registerResponse.getEmail());
-        return registerResponse;
+        UserDetails userDetails = userService.getUser(token);
+        log.info("Профиль пользователя {} найден в системе.", userDetails.getEmail());
+        return userDetails;
     }
 
     @PutMapping("/profile")

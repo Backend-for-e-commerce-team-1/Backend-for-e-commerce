@@ -2,23 +2,29 @@ package ru.practikum.masters.authservice.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.metrics.data.DefaultRepositoryTagsProvider;
 import org.springframework.stereotype.Service;
 import ru.practikum.masters.authservice.exception.InvalidCredentialsException;
+import ru.practikum.masters.authservice.model.Role;
+import ru.practikum.masters.authservice.model.RoleType;
 import ru.practikum.masters.authservice.model.User;
-
+import ru.practikum.masters.authservice.repository.RoleRepository;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class JwtTokenProvider {
+
+    private final RoleRepository roleRepository;
+
+    private final DefaultRepositoryTagsProvider repositoryTagsProvider;
 
     @Value("${spring.security.jwt.secretKey}")
     private String secret;
@@ -35,6 +41,7 @@ public class JwtTokenProvider {
         claims.put("userId", user.getUserId().toString());
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
+        claims.put("roles", user.getRoles());
 
         return Jwts.builder()
                 .claims(claims)
@@ -61,6 +68,11 @@ public class JwtTokenProvider {
         user.setUserId(UUID.fromString(validateToken(token).get("userId", String.class)));
         user.setEmail(validateToken(token).get("email", String.class));
         user.setUsername(validateToken(token).get("username", String.class));
+
+        //Извлечение списка ролей
+        List<?> roleList = validateToken(token).get("roles", List.class);
+        List<Role> roles = convertToRoleList(roleList);
+        user.setRoles(roles);
 
         return user;
     }
@@ -101,4 +113,29 @@ public class JwtTokenProvider {
             throw new InvalidCredentialsException("Токен не может быть пустым", "TOKEN_EMPTY");
         }
     }
+
+    /**
+     * Конвертация списка ролей из токена в коллекцию объектов Role
+     *
+     * @param rawList List
+     * @return List role
+     */
+    private List<Role> convertToRoleList(List<?> rawList) {
+        Role role = new Role();
+        if (rawList == null) {
+            return Collections.emptyList();
+        }
+
+        List<Role> roles = new ArrayList<>();
+        for (Object item : rawList) {
+            if (item instanceof String) {
+                role.setRoleName(RoleType.valueOf((String) item));
+                roles.add(role);
+            } else if (item instanceof Role) {
+                roles.add((Role) item);
+            }
+        }
+        return (roles);
+    }
+
 }
