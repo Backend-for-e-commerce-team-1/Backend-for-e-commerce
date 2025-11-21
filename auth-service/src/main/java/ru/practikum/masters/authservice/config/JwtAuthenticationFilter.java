@@ -20,7 +20,7 @@ import ru.practikum.masters.authservice.service.JwtTokenProvider;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -67,12 +67,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Извлекаем пользователя из токена
             User user = jwtTokenProvider.getUsernameFromToken(jwt);
 
+            // Преобразуем роли пользователя в GrantedAuthority
+            List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority(role.getRoleName().toString()))
+                    .toList();
+
             // Создаем объект аутентификации для Spring Security
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     user,
                     null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-            );
+                    authorities);
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             // Устанавливаем аутентификацию в контекст Security

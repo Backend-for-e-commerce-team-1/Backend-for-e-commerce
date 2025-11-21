@@ -8,7 +8,7 @@ public interface UserService {
 
     LoginResponse authenticate(LoginRequest authUserDto);
 
-    RegisterResponse getUser(String token);
+    UserDetails getUser(String token);
 
     UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token);
 

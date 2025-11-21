@@ -10,16 +10,20 @@ public interface UserMapper {
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     User toUserFromNewUser(RegisterRequest newUser);
 
 
     RegisterResponse toUserDto(User user);
+
+    UserDetails toUserDtoDetails(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     void updateUserFromDto(UpdateUserRequestDto userDto, @MappingTarget User user);
 
     UpdateUserResponseDto toUpdateResponseFromUser(User user);
