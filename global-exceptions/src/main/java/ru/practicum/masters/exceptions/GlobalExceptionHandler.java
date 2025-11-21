@@ -1,26 +1,34 @@
 package ru.practicum.masters.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.masters.exceptions.config.GlobalExceptionsProperties;
 import ru.practicum.masters.exceptions.exception.*;
 
 import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final GlobalExceptionsProperties exceptionsProperties;
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleResourceNotFoundException(
             final ResourceNotFoundException e,
             final HttpServletRequest request) {
-        log.warn("Resource not found: {} for path: {}", e.getMessage(), request.getRequestURI());
+        if (exceptionsProperties.isLogExceptions()) {
+            log.warn("Resource not found: {} for path: {}", e.getMessage(), request.getRequestURI());
+        }
+
         return new ErrorResponse(
                 ErrorStatus.NOT_FOUND,
                 "Resource not found",
@@ -34,7 +42,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleDuplicateResourceException(
             final DuplicateResourceException e,
             final HttpServletRequest request) {
-        log.warn("Duplicate resource: {} for path: {}", e.getMessage(), request.getRequestURI());
+        if (exceptionsProperties.isLogExceptions()) {
+            log.warn("Duplicate resource: {} for path: {}", e.getMessage(), request.getRequestURI());
+        }
         return new ErrorResponse(
                 ErrorStatus.CONFLICT,
                 "Resource already exists",
@@ -47,7 +57,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleInsufficientStockException(
             final InsufficientStockException e,
             final HttpServletRequest request) {
-        log.warn("Insufficient stock: {} for path: {}", e.getMessage(), request.getRequestURI());
+        if (exceptionsProperties.isLogExceptions()) {
+            log.warn("Insufficient stock: {} for path: {}", e.getMessage(), request.getRequestURI());
+        }
         return new ErrorResponse(
                 ErrorStatus.CONFLICT,
                 "Insufficient quantity available",
@@ -61,7 +73,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleInvalidTokenException(
             final InvalidTokenException e,
             final HttpServletRequest request) {
-        log.warn("Invalid token: {} for path: {}", e.getMessage(), request.getRequestURI());
+        if (exceptionsProperties.isLogExceptions()) {
+            log.warn("Invalid token: {} for path: {}", e.getMessage(), request.getRequestURI());
+        }
         return new ErrorResponse(
                 ErrorStatus.UNAUTHORIZED,
                 "Token is invalid or expired",
@@ -75,7 +89,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleInvalidCredentialsException(
             final InvalidCredentialsException e,
             final HttpServletRequest request) {
-        log.warn("Invalid credentials for path: {}", request.getRequestURI());
+        if (exceptionsProperties.isLogExceptions()) {
+            log.warn("Invalid credentials for path: {}", request.getRequestURI());
+        }
         return new ErrorResponse(
                 ErrorStatus.UNAUTHORIZED,
                 "Invalid username or password",
@@ -88,7 +104,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleAccessDeniedException(
             AccessDeniedException e,
             HttpServletRequest request) {
+        if (exceptionsProperties.isLogExceptions()) {
         log.warn("Access denied: {} for path: {}", e.getMessage(), request.getRequestURI());
+        }
         return new ErrorResponse(
                 ErrorStatus.FORBIDDEN,
                 "Access denied",
@@ -101,13 +119,14 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleMethodArgumentNotValidException(
             final MethodArgumentNotValidException e,
             final HttpServletRequest request) {
-
         String errorMessage = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-        log.warn("Validation failed: {} for path: {}", errorMessage, request.getRequestURI());
+        if (exceptionsProperties.isLogExceptions()) {
+            log.warn("Validation failed: {} for path: {}", errorMessage, request.getRequestURI());
+        }
         return new ErrorResponse(
                 ErrorStatus.BAD_REQUEST,
                 "Validation failed",
@@ -121,7 +140,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleInternalServerError(
             final Exception e,
             final HttpServletRequest request) {
-        log.error("Internal Server Error for path: {}", request.getRequestURI(), e);
+        if (exceptionsProperties.isLogExceptions()) {
+            log.error("Internal Server Error for path: {}", request.getRequestURI(), e);
+        }
         return new ErrorResponse(
                 ErrorStatus.INTERNAL_SERVER_ERROR,
                 "Internal Server Error",
