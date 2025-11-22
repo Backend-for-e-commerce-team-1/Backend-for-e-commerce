@@ -47,6 +47,12 @@ logging:
 server:
   port: 8083
 
+app:
+  admin:
+    auto-create: true
+    password: "${ADMIN_PASSWORD}"
+    username: "Administrator"
+    email: "admin@e-commerce.com"
   security:
     jwt:
       secretKey: c0382cfa-92ca-4c88-8c67-17f5e60dd71c
