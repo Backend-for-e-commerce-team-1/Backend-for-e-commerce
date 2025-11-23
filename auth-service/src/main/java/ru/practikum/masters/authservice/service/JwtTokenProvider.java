@@ -26,10 +26,10 @@ public class JwtTokenProvider {
 
     private final DefaultRepositoryTagsProvider repositoryTagsProvider;
 
-    @Value("${spring.security.jwt.secretKey}")
+    @Value("${app.security.jwt.secretKey}")
     private String secret;
 
-    @Value("${spring.security.jwt.expiration}")
+    @Value("${app.security.jwt.expiration}")
     private Long expiration;
 
     private SecretKey getSigningKey() {
