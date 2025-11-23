@@ -29,83 +29,78 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
-        final String tag = "CategoryServiceImpl.create";
-        log.debug("{}: Enter with params: request={}", tag, request);
+        log.debug("Enter with params: request={}", request);
             if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
-                log.error("{}: Conflict - category name exists: {}", tag, request.getName());
+                log.error("Conflict - category name exists: {}", request.getName());    
                 throw new ConflictException("Category with the same name already exists");
             }
             Category category = categoryMapper.toEntity(request);
-            log.debug("{}: Mapped entity: {}", tag, category);
+            log.debug("Mapped entity: {}", category);
             category = categoryRepository.save(category);
-            log.info("{}: Successfully created category, id={}", tag, category.getId());
+            log.info("Successfully created category, id={}", category.getId());
             CategoryResponse response = categoryMapper.toResponse(category);
-            log.debug("{}: Exit with result: {}", tag, response);
+            log.debug("Exit with result: {}", response);
             return response;
     }
 
     @Override
     public Page<CategoryResponse> list(Pageable pageable) {
-        final String tag = "CategoryServiceImpl.list";
-        log.debug("{}: Enter with params: pageable={}", tag, pageable);
+        log.debug("Enter with params: pageable={}", pageable);
             Page<CategoryResponse> page = categoryRepository.findAll(pageable).map(categoryMapper::toResponse);
-            log.info("{}: Fetched categories page, totalElements={}", tag, page.getTotalElements());
-            log.debug("{}: Exit with result page size={}", tag, page.getContent().size());
+            log.info("Fetched categories page, totalElements={}", page.getTotalElements());
+            log.debug("Exit with result page size={}", page.getContent().size());
             return page;
     }
 
     @Override
     public CategoryResponse get(UUID id) {
-        final String tag = "CategoryServiceImpl.get";
-        log.debug("{}: Enter with params: id={}", tag, id);
+        log.debug("Enter with params: id={}", id);
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.error("{}: NotFound - category id={}", tag, id);
+                        log.error("NotFound - category id={}", id);
                         return new NotFoundException("Category not found");
                     });
             CategoryResponse response = categoryMapper.toResponse(category);
-            log.info("{}: Category fetched, id={}", tag, category.getId());
-            log.debug("{}: Exit with result: {}", tag, response);
+            log.info("Category fetched, id={}", category.getId());
+            log.debug("Exit with result: {}", response);
             return response;
     }
 
     @Override
     @Transactional
     public CategoryResponse update(UUID id, CategoryRequest request) {
-        final String tag = "CategoryServiceImpl.update";
-        log.debug("{}: Enter with params: id={}, request={}", tag, id, request);
+        log.debug("Enter with params: id={}, request={}", id, request);
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.error("{}: NotFound - category id={}", tag, id);
+                        log.error("NotFound - category id={}", id);
                         return new NotFoundException("Category not found");
                     });
             category.setName(request.getName());
-            log.debug("{}: Updated category name to: {}", tag, request.getName());
+            log.debug("Updated category name to: {}", request.getName());   
             category = categoryRepository.save(category);
-            log.info("{}: Category updated, id={}", tag, category.getId());
+            log.info("Category updated, id={}", category.getId());
             CategoryResponse response = categoryMapper.toResponse(category);
-            log.debug("{}: Exit with result: {}", tag, response);
+            log.debug("Exit with result: {}", response);
             return response;
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
-        final String tag = "CategoryServiceImpl.delete";
-        log.debug("{}: Enter with params: id={}", tag, id);
+        log.debug("Enter with params: id={}", id);
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.error("{}: NotFound - category id={}", tag, id);
+                        log.error("NotFound - category id={}", id);
                         return new NotFoundException("Category not found");
                     });
             long deps = productRepository.countByCategory_Id(id);
-            log.debug("{}: Dependent products count={}", tag, deps);
+            log.debug("Dependent products count={}", deps);
             if (deps > 0) {
-                log.error("{}: Conflict - related products exist for category id={}", tag, id);
+                log.error("Conflict - related products exist for category id={}", id);
                 throw new ConflictException("Cannot delete category: related products exist");
             }
             categoryRepository.delete(category);
-            log.info("{}: Category deleted, id={}", tag, category.getId());
-            log.debug("{}: Exit without result (void)", tag);
+            log.info("Category deleted, id={}", category.getId());
+            log.debug("Exit without result (void)");
 }
 }

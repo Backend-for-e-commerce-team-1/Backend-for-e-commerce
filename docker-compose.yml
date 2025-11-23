@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   grafana:
     build: './config/grafana'
@@ -81,7 +79,7 @@ services:
     ports:
       - "4569:4569"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://goods-db:5432/goods
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://goods-db:5432/goodsdb
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SERVER_PORT=4569
@@ -99,7 +97,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=goods
+      - POSTGRES_DB=goodsdb
     networks:
       - monitoring
     volumes:
@@ -108,6 +106,5 @@ services:
 networks:
   monitoring:
     driver: bridge
-
 volumes:
   pgdata_goods:

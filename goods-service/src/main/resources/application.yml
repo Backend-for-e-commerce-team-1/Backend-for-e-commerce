@@ -4,6 +4,18 @@ server:
 spring:
   application:
     name: goods-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/goodsdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:iamroot}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
 
 management:
   tracing:
@@ -11,18 +23,6 @@ management:
       probability: 1.0
     propagation:
       type: w3c
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/goodsdb}
-    username: ${SPRING_DATASOURCE_USERNAME:goods}
-    password: ${SPRING_DATASOURCE_PASSWORD:goods}
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-    show-sql: false
 
   endpoints:
     web:
