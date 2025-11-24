@@ -1,0 +1,88 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'maven-publish'
+}
+
+group = 'ru.practicum.masters.exceptions'
+version = '0.0.1-SNAPSHOT'
+
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.7'
+    }
+}
+
+dependencies {
+    implementation 'org.springframework:spring-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework:spring-context'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
+    implementation 'jakarta.servlet:jakarta.servlet-api'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'ch.qos.logback:logback-classic'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework:spring-jdbc'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+    archiveBaseName = 'global-exceptions-starter'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'ru.practicum.masters.exceptions'
+            artifactId = 'global-exceptions'
+            version = '0.0.1-SNAPSHOT'
+        }
+    }
+}
+
+tasks.register('copyJarToLibs', Copy) {
+    from jar
+    into "${rootProject.projectDir}/libs"
+}
+
+build.dependsOn copyJarToLibs
+
+jar.finalizedBy copyJarToLibs
+
+tasks.register("installToLocalRepo") {
+    dependsOn("publishToMavenLocal")
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    suppressedValidationErrors.add('dependencies-without-versions')
+}
