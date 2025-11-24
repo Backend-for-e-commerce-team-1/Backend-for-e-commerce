@@ -10,7 +10,10 @@ import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DuplicateUserException;
 import ru.practikum.masters.authservice.exception.NotFoundException;
 import ru.practikum.masters.authservice.mapper.UserMapper;
+import ru.practikum.masters.authservice.model.Role;
+import ru.practikum.masters.authservice.model.RoleType;
 import ru.practikum.masters.authservice.model.User;
+import ru.practikum.masters.authservice.repository.RoleRepository;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -22,6 +25,7 @@ import java.util.*;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -41,6 +45,9 @@ public class UserServiceImpl implements UserService {
         //Хэшируем пароль
         String hashedPassword = passwordEncoder.encode(newUser.getPassword());
         user.setPassword(hashedPassword);
+        //Назначаем роль
+        Role role = getRole(RoleType.ROLE_USER);
+        user.setRoles(List.of(role));
         //Устанавливаем дату создания
         user.setCreatedAt(LocalDateTime.now());
         //Сохраняем в базе
@@ -84,12 +91,12 @@ public class UserServiceImpl implements UserService {
      * @return UserDto  пользователь
      */
     @Override
-    public RegisterResponse getUser(String token) {
-        User userFromToken = getUsernameFromToken(token);
+    public UserDetails getUser(String token) {
+        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
-        return userMapper.toUserDto(user);
+        return userMapper.toUserDtoDetails(user);
     }
 
     /**
@@ -182,6 +189,11 @@ public class UserServiceImpl implements UserService {
             log.error("Неверное имя пользователя или пароль.");
             throw new AuthenticationException("Неверное имя пользователя или пароль.");
         }
+    }
+
+    private Role getRole(RoleType role) {
+        return roleRepository.findByRoleName(role)
+                .orElseThrow(() -> new NotFoundException("Роль  '" + role + "' не найдена в системе."));
     }
 
 }

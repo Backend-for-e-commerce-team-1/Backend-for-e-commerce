@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-1" author="Plastinin">
+        <createTable tableName="users" remarks="Пользователи">
+            <column name="user_id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_username"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_email"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="001-2" author="Plastinin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_users_username_unique" tableName="users"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="users" indexName="idx_users_username_unique" unique="true">
+            <column name="username"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="001-3" author="Plastinin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_users_email_unique" tableName="users"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="users" indexName="idx_users_email_unique" unique="true">
+            <column name="email"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="001-4" author="Plastinin">
+        <createTable tableName="roles" remarks="Роли">
+            <column name="role_id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="role_name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="roles_unique"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="001-5" author="Plastinin">
+        <createTable tableName="user_roles" remarks="Table for mapping users to roles">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="user_roles"
+                columnNames="user_id, role_id"
+                constraintName="user_roles_unique"/>
+
+        <addForeignKeyConstraint
+                baseTableName="user_roles"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="user_id"
+                constraintName="user_roles_users_fk"/>
+
+        <addForeignKeyConstraint
+                baseTableName="user_roles"
+                baseColumnNames="role_id"
+                referencedTableName="roles"
+                referencedColumnNames="role_id"
+                constraintName="user_roles_roles_fk"/>
+    </changeSet>
+
+</databaseChangeLog>
