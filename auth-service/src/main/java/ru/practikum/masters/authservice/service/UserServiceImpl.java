@@ -14,10 +14,7 @@ import ru.practikum.masters.authservice.model.User;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -63,7 +60,12 @@ public class UserServiceImpl implements UserService {
         User user = authenticate(authUserDto.getEmail(), authUserDto.getPassword());
 
         // Генерируем JWT токен
-        String token = jwtTokenProvider.generateToken(user);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId().toString());
+        claims.put("username", user.getUsername());
+        claims.put("email", user.getEmail());
+
+        String token = jwtTokenProvider.generateToken(claims, user.getEmail());
         Long expiresIn = jwtTokenProvider.getExpirationInSeconds();
 
         // Собираем ответ
@@ -83,7 +85,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public RegisterResponse getUser(String token) {
-        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
+        User userFromToken = getUsernameFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
@@ -101,7 +103,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
         //Извлекаем пользователя из токена
-        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
+        User userFromToken = getUsernameFromToken(token);
 
         //Находим пользователя в базе
         User oldUser = userRepository.findById(userFromToken.getUserId())
@@ -120,6 +122,23 @@ public class UserServiceImpl implements UserService {
         UpdateUserResponseDto updateUserResponseDto = userMapper.toUpdateResponseFromUser(updatedUser);
         updateUserResponseDto.setUpdatedAt(updateAt);
         return updateUserResponseDto;
+    }
+
+    /**
+     * Проверяем токен и если он валидный,
+     * извлекаем информацию о пользователе
+     *
+     * @param token - string
+     * @return - User
+     */
+    public User getUsernameFromToken(String token) {
+        User user = new User();
+        var claims = jwtTokenProvider.validateToken(token);
+        user.setUserId(UUID.fromString(claims.get("userId", String.class)));
+        user.setEmail(claims.get("email", String.class));
+        user.setUsername(claims.get("username", String.class));
+
+        return user;
     }
 
     /**

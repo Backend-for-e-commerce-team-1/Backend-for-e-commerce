@@ -1,31 +1,27 @@
-package ru.practikum.masters.authservice.service;
+package ru.practikum.masters.securitylib.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.practikum.masters.authservice.exception.InvalidCredentialsException;
-import ru.practikum.masters.authservice.model.User;
-
+import ru.practikum.masters.securitylib.config.SecurityLibProperties;
+import ru.practikum.masters.securitylib.exceptions.InvalidCredentialsException;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
-@Service
 @Slf4j
-public class JwtTokenProvider {
+@Service
+@RequiredArgsConstructor
+public class JwtService {
 
-    @Value("${spring.security.jwt.secretKey}")
-    private String secret;
-
-    @Value("${spring.security.jwt.expiration}")
-    private Long expiration;
+    private final SecurityLibProperties properties;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(properties.getSecret().getBytes());
     }
 
     public String generateToken(Map<String, Object> claims, String subject) {
@@ -34,13 +30,13 @@ public class JwtTokenProvider {
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration * 1000))
+                .expiration(new Date(System.currentTimeMillis() + properties.getExpiration() * 1000))
                 .signWith(getSigningKey())
                 .compact();
     }
 
     public Long getExpirationInSeconds() {
-        return expiration;
+        return properties.getExpiration();
     }
 
     /**

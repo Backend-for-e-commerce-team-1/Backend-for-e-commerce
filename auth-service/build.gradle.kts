@@ -59,8 +59,8 @@ dependencies {
 	implementation("io.micrometer:micrometer-observation")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation("ru.practicum.masters.securitylib:security-lib:0.0.1-SNAPSHOT")
 }
 
 // Настройка отчетов Checkstyle

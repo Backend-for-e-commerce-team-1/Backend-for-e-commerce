@@ -1,10 +1,11 @@
-package ru.practikum.masters.authservice.config;
+package ru.practikum.masters.securitylib.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.lang.NonNull;
@@ -15,25 +16,26 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.practikum.masters.authservice.service.JwtTokenProvider;
+import ru.practikum.masters.securitylib.service.JwtService;
+import ru.practikum.masters.securitylib.service.ExcludeSecurityService;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final int BEARER_PREFIX_LENGTH = "Bearer ".length();
-    private final JwtTokenProvider jwtTokenProvider;
+    private final ExcludeSecurityService excludeSecurityService;
+    private final JwtService jwtService;
 
-    private final RestTemplateBuilder restTemplateBuilder;
 
-    @Value("${spring.security.public-endpoints}")
-    private String[] publicEndpoints;
+    @Autowired
+    public JwtAuthenticationFilter(ExcludeSecurityService excludeSecurityService, JwtService jwtService) {
+        this.excludeSecurityService = excludeSecurityService;
+        this.jwtService = jwtService;
+    }
 
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -44,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Пропускаем публичные эндпоинты
         final String path = request.getServletPath();
-        if (isPublicEndpoint(path)) {
+        if (excludeSecurityService.isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -62,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = authHeader.substring(BEARER_PREFIX_LENGTH);
 
             // Извлекаем cвойства пользователя из токена
-            var claims = jwtTokenProvider.validateToken(jwt);
+            var claims = jwtService.validateToken(jwt);
 
             // Создаем объект аутентификации для Spring Security
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -85,17 +87,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-    /**
-     * Является ли endpoint публичным
-     * Список публичных endpoints лежит в файле application.yaml
-     *
-     * @param path String
-     * @return boolean
-     */
-    private boolean isPublicEndpoint(String path) {
-        return Arrays.stream(publicEndpoints)
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
-    }
-
 }
