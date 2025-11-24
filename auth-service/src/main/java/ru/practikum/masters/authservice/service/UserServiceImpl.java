@@ -7,10 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
-import ru.practikum.masters.authservice.exception.DataConflictException;
+import ru.practikum.masters.authservice.exception.DuplicateUserException;
 import ru.practikum.masters.authservice.exception.NotFoundException;
 import ru.practikum.masters.authservice.mapper.UserMapper;
+import ru.practikum.masters.authservice.model.Role;
+import ru.practikum.masters.authservice.model.RoleType;
 import ru.practikum.masters.authservice.model.User;
+import ru.practikum.masters.authservice.repository.RoleRepository;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -25,7 +28,8 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService;
+    private final RoleRepository roleRepository;
+    private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -37,13 +41,16 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public UserDto addUser(NewUserRequestDto newUser) {
+    public RegisterResponse registerUser(RegisterRequest newUser) {
         User user = userMapper.toUserFromNewUser(newUser);
         //Проверяем уникальность. Если нарушена - выбрасываем исключение
         emailUsageCheck(user.getEmail(), user.getUsername(), UUID.randomUUID());
         //Хэшируем пароль
         String hashedPassword = passwordEncoder.encode(newUser.getPassword());
         user.setPassword(hashedPassword);
+        //Назначаем роль
+        Role role = getRole(RoleType.ROLE_USER);
+        user.setRoles(List.of(role));
         //Устанавливаем дату создания
         user.setCreatedAt(LocalDateTime.now());
         //Сохраняем в базе
@@ -59,17 +66,17 @@ public class UserServiceImpl implements UserService {
      * @return AuthUserResponseDto Токен и время его действия
      */
     @Override
-    public AuthUserResponseDto authUser(AuthUserRequestDto authUserDto) {
+    public LoginResponse authenticate(LoginRequest authUserDto) {
         User user = authenticate(authUserDto.getEmail(), authUserDto.getPassword());
 
         // Генерируем JWT токен
-        String token = jwtService.generateToken(user);
-        Long expiresIn = jwtService.getExpirationInSeconds();
+        String token = jwtTokenProvider.generateToken(user);
+        Long expiresIn = jwtTokenProvider.getExpirationInSeconds();
 
         // Собираем ответ
-        AuthUserResponseDto authUserResponseDto = new AuthUserResponseDto();
+        LoginResponse authUserResponseDto = new LoginResponse();
         authUserResponseDto.setToken(token);
-        authUserResponseDto.setExpires_in(expiresIn);
+        authUserResponseDto.setExpiresIn(expiresIn);
 
         return authUserResponseDto;
     }
@@ -82,12 +89,12 @@ public class UserServiceImpl implements UserService {
      * @return UserDto  пользователь
      */
     @Override
-    public UserDto getUser(String token) {
-        User userFromToken = jwtService.extractUserFromToken(token);
+    public UserDetails getUser(String token) {
+        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
-        return userMapper.toUserDto(user);
+        return userMapper.toUserDtoDetails(user);
     }
 
     /**
@@ -97,13 +104,11 @@ public class UserServiceImpl implements UserService {
      * @param token      токен
      * @return UpdateUserResponseDto исправленный пользователь
      */
-    //TODO Надо ли предусмотреть возможность смены пароля у пользователя?
-    //TODO Дата модификации = дата создания пользователя? Или надо хранить дату модификации в базе в отдельном поле?
     @Transactional
     @Override
     public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
         //Извлекаем пользователя из токена
-        User userFromToken = jwtService.extractUserFromToken(token);
+        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
 
         //Находим пользователя в базе
         User oldUser = userRepository.findById(userFromToken.getUserId())
@@ -115,11 +120,12 @@ public class UserServiceImpl implements UserService {
 
         // Обновляем данные пользователя из DTO
         userMapper.updateUserFromDto(updateUser, oldUser);
-
+        LocalDateTime updateAt = LocalDateTime.now(); // Дата и время обновления пользователя
+        oldUser.setUpdatedAt(updateAt);
         // Сохраняем обновленного пользователя
         User updatedUser = userRepository.save(oldUser);
         UpdateUserResponseDto updateUserResponseDto = userMapper.toUpdateResponseFromUser(updatedUser);
-        updateUserResponseDto.setUpdatedAt(LocalDateTime.now());
+        updateUserResponseDto.setUpdatedAt(updateAt);
         return updateUserResponseDto;
     }
 
@@ -136,11 +142,11 @@ public class UserServiceImpl implements UserService {
         for (User user : users) {
             if (!userId.equals(user.getUserId()) && user.getEmail().equals(email)) {
                 log.error("Email {} уже используется в системе другим пользователем.", email);
-                throw new DataConflictException("Email " + email + " уже используется в системе другим пользователем.");
+                throw new DuplicateUserException("Email " + email + " уже используется в системе другим пользователем.");
             }
             if (!userId.equals(user.getUserId()) && user.getUsername().equals(username)) {
                 log.error("Имя пользователя {} уже используется в системе другим пользователем.", username);
-                throw new DataConflictException("Имя пользователя " + username + " уже используется в системе другим пользователем.");
+                throw new DuplicateUserException("Имя пользователя " + username + " уже используется в системе другим пользователем.");
             }
         }
     }
@@ -164,6 +170,11 @@ public class UserServiceImpl implements UserService {
             log.error("Неверное имя пользователя или пароль.");
             throw new AuthenticationException("Неверное имя пользователя или пароль.");
         }
+    }
+
+    private Role getRole(RoleType role) {
+        return roleRepository.findByRoleName(role)
+                .orElseThrow(() -> new NotFoundException("Роль  '" + role + "' не найдена в системе."));
     }
 
 }

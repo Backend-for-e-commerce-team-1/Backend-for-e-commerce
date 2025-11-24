@@ -12,13 +12,17 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
 
   datasource:
     url: jdbc:postgresql://localhost:5432/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+    enabled: true
 
 management:
   tracing:
@@ -28,9 +32,9 @@ management:
       type: w3c
 
   endpoints:
-   web:
-    exposure:
-     include: health, metrics, info
+    web:
+      exposure:
+        include: health, metrics, info
 
 opentelemetry:
   exporter:
@@ -46,3 +50,11 @@ logging:
 
 server:
   port: 8083
+
+app:
+  security:
+    jwt:
+      secretKey: c0382cfa-92ca-4c88-8c67-17f5e60dd71c
+      expiration: 3600
+
+    public-endpoints: "/users/register,/users/login"

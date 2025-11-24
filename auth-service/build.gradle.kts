@@ -51,6 +51,7 @@ dependencies {
 	implementation("io.micrometer:micrometer-tracing-bridge-otel")
 	implementation("io.micrometer:micrometer-observation")
 
+  implementation("org.liquibase:liquibase-core")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
