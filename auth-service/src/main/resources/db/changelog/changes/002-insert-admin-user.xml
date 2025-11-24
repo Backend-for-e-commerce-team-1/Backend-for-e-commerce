@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-1" author="Plastinin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM users WHERE username = 'Admin'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="users">
+            <column name="user_id" valueComputed="'2127549e-56c0-47f3-84ac-0b16a989e1b9'"/>
+            <column name="username" value="Admin"/>
+            <column name="email" value="admin@e-commerce.com"/>
+            <column name="password" value="$2a$10$7UqQ28Vnkfhbu63kro1vGObSzTfJM./Eo.4QvYkwmQpSfIKdNH8d."/> <!--StrongPassword123ForAdmin-->
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" value="null"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="002-2" author="Plastinin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from roles r where r.role_name = 'ROLE_ADMIN'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="role_id" valueComputed="'8330e733-7954-4d96-aa26-f1b7173269b4'"/>
+            <column name="role_name" value="ROLE_ADMIN"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="002-3" author="Plastinin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from roles r where r.role_name = 'ROLE_USER'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="roles">
+            <column name="role_id" valueComputed="'818b9863-ca1a-4fab-8aac-741df0c79fc7'"/>
+            <column name="role_name" value="ROLE_USER"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="002-4" author="Plastinin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1)
+                  from user_roles ur
+                  join users u on u.user_id = ur.user_id
+                  join roles r on r.role_id = ur.role_id
+                 where u.username = 'Admin'
+                   and r.role_name = 'ROLE_ADMIN';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="user_roles">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="user_id" valueComputed="'2127549e-56c0-47f3-84ac-0b16a989e1b9'"/>
+            <column name="role_id" valueComputed="'8330e733-7954-4d96-aa26-f1b7173269b4'"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -20,7 +20,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Value("${spring.security.public-endpoints}")
+    @Value("${app.security.public-endpoints}")
     private String[] publicEndpoints;
 
     @Bean

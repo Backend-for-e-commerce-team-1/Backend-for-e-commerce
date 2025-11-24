@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final RestTemplateBuilder restTemplateBuilder;
 
-    @Value("${spring.security.public-endpoints}")
+    @Value("${app.security.public-endpoints}")
     private String[] publicEndpoints;
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
