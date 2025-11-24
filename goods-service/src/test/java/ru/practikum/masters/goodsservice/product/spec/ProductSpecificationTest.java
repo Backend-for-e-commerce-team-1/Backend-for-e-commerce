@@ -1,0 +1,169 @@
+package ru.practikum.masters.goodsservice.product.spec;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.data.jpa.domain.Specification;
+import ru.practikum.masters.goodsservice.product.dto.ProductFilterRequest;
+import ru.practikum.masters.goodsservice.product.model.Product;
+
+import java.math.BigDecimal;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class ProductSpecificationTest {
+
+    private Root<Product> mockRootForCategoryBrandPrice(Path<Object> pricePath,
+                                                        Path<Object> categoryIdPath,
+                                                        Path<Object> brandIdPath) {
+        @SuppressWarnings("unchecked")
+        Root<Product> root = (Root<Product>) mock(Root.class);
+        Path<Object> categoryPath = mock(Path.class);
+        Path<Object> brandPath = mock(Path.class);
+        when(root.get("category")).thenReturn(categoryPath);
+        when(categoryPath.get("id")).thenReturn(categoryIdPath);
+        when(root.get("brand")).thenReturn(brandPath);
+        when(brandPath.get("id")).thenReturn(brandIdPath);
+        when(root.get("price")).thenReturn(pricePath);
+        return root;
+    }
+
+    @Test
+    void buildFromFilter_onlyCategory_returnsPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        ProductFilterRequest filter = new ProductFilterRequest();
+        filter.setCategory(UUID.randomUUID().toString());
+
+        Path<Object> pricePath = mock(Path.class);
+        Path<Object> categoryIdPath = mock(Path.class);
+        Path<Object> brandIdPath = mock(Path.class);
+        Root<Product> root = mockRootForCategoryBrandPrice(pricePath, categoryIdPath, brandIdPath);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        when(cb.equal(any(), any(UUID.class))).thenReturn(mock(Predicate.class));
+
+        Specification<Product> spec = specBuilder.buildFromFilter(filter);
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNotNull();
+    }
+
+    @Test
+    void buildFromFilter_onlyBrand_returnsPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        ProductFilterRequest filter = new ProductFilterRequest();
+        filter.setBrand(UUID.randomUUID().toString());
+
+        Path<Object> pricePath = mock(Path.class);
+        Path<Object> categoryIdPath = mock(Path.class);
+        Path<Object> brandIdPath = mock(Path.class);
+        Root<Product> root = mockRootForCategoryBrandPrice(pricePath, categoryIdPath, brandIdPath);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        when(cb.equal(any(), any(UUID.class))).thenReturn(mock(Predicate.class));
+
+        Specification<Product> spec = specBuilder.buildFromFilter(filter);
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNotNull();
+    }
+
+    @Test
+    void buildFromFilter_priceMinOnly_returnsPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        ProductFilterRequest filter = new ProductFilterRequest();
+        filter.setPriceMin(new java.math.BigDecimal("10.0"));
+        filter.setPriceMax(null);
+
+        Path<Object> pricePath = Mockito.mock(Path.class);
+        Path<Object> categoryIdPath = mock(Path.class);
+        Path<Object> brandIdPath = mock(Path.class);
+        Root<Product> root = mockRootForCategoryBrandPrice(pricePath, categoryIdPath, brandIdPath);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        when(cb.greaterThanOrEqualTo(
+                Mockito.<jakarta.persistence.criteria.Expression<BigDecimal>>any(),
+                any(BigDecimal.class)
+        )).thenReturn(mock(Predicate.class));
+
+        Specification<Product> spec = specBuilder.buildFromFilter(filter);
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNotNull();
+    }
+
+    @Test
+    void buildFromFilter_allNull_returnsNullPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        ProductFilterRequest filter = new ProductFilterRequest();
+
+        Path<Object> pricePath = Mockito.mock(Path.class);
+        Path<Object> categoryIdPath = mock(Path.class);
+        Path<Object> brandIdPath = mock(Path.class);
+        Root<Product> root = mockRootForCategoryBrandPrice(pricePath, categoryIdPath, brandIdPath);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        Specification<Product> spec = specBuilder.buildFromFilter(filter);
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNull();
+    }
+
+    @Test
+    void searchByFields_name_only_returnsPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        String queryStr = "Ace";
+        Set<String> fields = Set.of("name");
+
+        @SuppressWarnings("unchecked")
+        Root<Product> root = (Root<Product>) mock(Root.class);
+        Path<Object> namePath = Mockito.mock(Path.class);
+        when(root.get("name")).thenReturn(namePath);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        jakarta.persistence.criteria.Expression<String> lowerExpr = mock(jakarta.persistence.criteria.Expression.class);
+        when(cb.lower(any())).thenReturn(lowerExpr);
+        when(cb.like(any(), anyString())).thenReturn(mock(Predicate.class));
+
+        Specification<Product> spec = specBuilder.searchByFields(queryStr, fields);
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNotNull();
+    }
+
+    @Test
+    void searchByFields_unknownField_returnsNullPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        Specification<Product> spec = specBuilder.searchByFields("q", Set.of("unknown"));
+
+        @SuppressWarnings("unchecked")
+        Root<Product> root = (Root<Product>) mock(Root.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNull();
+    }
+
+    @Test
+    void searchByFields_blankQuery_returnsNullPredicate() {
+        ProductSpecification specBuilder = new ProductSpecification();
+        Specification<Product> spec = specBuilder.searchByFields(" ", Set.of("name"));
+
+        @SuppressWarnings("unchecked")
+        Root<Product> root = (Root<Product>) mock(Root.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+
+        Predicate p = spec.toPredicate(root, query, cb);
+        assertThat(p).isNull();
+    }
+}

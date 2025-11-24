@@ -11,7 +11,7 @@ description = 'goods-service'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -22,24 +22,28 @@ repositories {
 // Конфигурация Checkstyle
 checkstyle {
     toolVersion = "10.12.5"
-    configFile = file("${rootDir}/checkstyle.xml")
+    configFile = file("${projectDir}/../checkstyle.xml")
     ignoreFailures = false
     maxWarnings = 0
+    showViolations = true
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     runtimeOnly 'org.postgresql:postgresql'
+    testImplementation 'com.h2database:h2'
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.opentelemetry:opentelemetry-api'
     implementation 'io.opentelemetry:opentelemetry-sdk'
     implementation 'io.opentelemetry:opentelemetry-exporter-logging'
     implementation 'io.micrometer:micrometer-tracing-bridge-otel'
     implementation 'io.micrometer:micrometer-observation'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation'ru.practicum.masters.securitylib:security-lib:0.0.1-SNAPSHOT'
