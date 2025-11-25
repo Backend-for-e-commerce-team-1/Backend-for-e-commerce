@@ -44,6 +44,10 @@ dependencies {
     testImplementation("com.h2database:h2")
 }
 
+tasks.named("compileJava") {
+    dependsOn(":global-exceptions:publishToMavenLocal")
+}
+
 // Настройка отчетов Checkstyle
 tasks.withType<Checkstyle>().configureEach {
     reports {
