@@ -18,13 +18,15 @@ public interface UserMapper {
 
     UserDetails toUserDtoDetails(User user);
 
+    UserProfileResponse toUserProfileResponse(User user);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "roles", ignore = true)
-    void updateUserFromDto(UpdateUserRequestDto userDto, @MappingTarget User user);
+    void updateUserFromDto(UpdateProfileRequest userDto, @MappingTarget User user);
 
     UpdateUserResponseDto toUpdateResponseFromUser(User user);
 }

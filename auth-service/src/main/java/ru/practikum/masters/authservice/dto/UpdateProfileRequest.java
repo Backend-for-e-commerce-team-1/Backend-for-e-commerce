@@ -11,7 +11,7 @@ import org.hibernate.validator.constraints.Length;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserRequestDto {
+public class UpdateProfileRequest {
 
     @Length(min = 2, max = 50)
     @NotBlank

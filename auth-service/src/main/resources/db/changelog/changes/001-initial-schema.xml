@@ -85,7 +85,8 @@
                 baseColumnNames="user_id"
                 referencedTableName="users"
                 referencedColumnNames="user_id"
-                constraintName="user_roles_users_fk"/>
+                constraintName="user_roles_users_fk"
+                onDelete="CASCADE"/>
 
         <addForeignKeyConstraint
                 baseTableName="user_roles"

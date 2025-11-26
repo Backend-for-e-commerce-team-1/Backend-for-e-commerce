@@ -1,0 +1,342 @@
+openapi: 3.0.3
+info:
+  title: Authentication Service API
+  version: 1.0.0
+  description: API для аутентификации и управления пользователями
+  contact:
+    name: API Support
+    email: support@authservice.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /users/register:
+    post:
+      tags:
+        - Authentication
+      summary: Регистрация пользователя
+      description: Публичный эндпоинт для регистрации нового пользователя
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              example1:
+                summary: Пример регистрации
+                value:
+                  email: "john@example.com"
+                  password: "StrongPassword123"
+                  name: "john_doe"
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Невалидные данные запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Пользователь с таким email уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      tags:
+        - Authentication
+      summary: Аутентификация пользователя
+      description: Публичный эндпоинт для входа в систему и получения JWT токена
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              example1:
+                summary: Пример входа
+                value:
+                  email: "john@example.com"
+                  password: "StrongPassword123"
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Невалидные данные запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/profile:
+    get:
+      tags:
+        - User Profile
+      summary: Получить профиль пользователя
+      description: Защищенный эндпоинт для получения информации о текущем пользователе
+      operationId: getUserProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Профиль пользователя успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: Требуется аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - User Profile
+      summary: Обновить профиль пользователя
+      description: Защищенный эндпоинт для обновления информации о пользователе
+      operationId: updateUserProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            examples:
+              example1:
+                summary: Пример обновления профиля
+                value:
+                  email: "john_new@example.com"
+                  name: "john_doe_updated"
+      responses:
+        '200':
+          description: Профиль пользователя успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserResponseDto'
+        '400':
+          description: Невалидные данные запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Требуется аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT токен аутентификации
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "john@example.com"
+        password:
+          type: string
+          format: password
+          description: Пароль пользователя
+          minLength: 6
+          example: "StrongPassword123"
+        name:
+          type: string
+          description: Имя пользователя
+          example: "john_doe"
+
+    RegisterResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID пользователя
+          example: 1
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "john@example.com"
+        name:
+          type: string
+          description: Имя пользователя
+          example: "john_doe"
+        registered:
+          type: string
+          format: date-time
+          description: Дата и время регистрации
+          example: "2024-01-15T10:30:00Z"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "john@example.com"
+        password:
+          type: string
+          format: password
+          description: Пароль пользователя
+          example: "StrongPassword123"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT токен для аутентификации
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        type:
+          type: string
+          description: Тип токена
+          example: "Bearer"
+        email:
+          type: string
+          description: Email пользователя
+          example: "john@example.com"
+        name:
+          type: string
+          description: Имя пользователя
+          example: "john_doe"
+
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID пользователя
+          example: 1
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "john@example.com"
+        name:
+          type: string
+          description: Имя пользователя
+          example: "john_doe"
+        registered:
+          type: string
+          format: date-time
+          description: Дата и время регистрации
+          example: "2024-01-15T10:30:00Z"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Новый email пользователя
+          example: "john_new@example.com"
+        name:
+          type: string
+          description: Новое имя пользователя
+          example: "john_doe_updated"
+
+    UpdateUserResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID пользователя
+          example: 1
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "john_new@example.com"
+        name:
+          type: string
+          description: Имя пользователя
+          example: "john_doe_updated"
+        updated:
+          type: string
+          format: date-time
+          description: Дата и время обновления
+          example: "2024-01-15T14:20:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Время возникновения ошибки
+          example: "2024-01-15T10:30:00Z"
+        status:
+          type: integer
+          description: HTTP статус код
+          example: 400
+        error:
+          type: string
+          description: Тип ошибки
+          example: "Bad Request"
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: "Невалидные данные запроса"
+        path:
+          type: string
+          description: Путь запроса
+          example: "/users/register"
