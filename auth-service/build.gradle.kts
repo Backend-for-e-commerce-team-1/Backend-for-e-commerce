@@ -15,15 +15,17 @@ java {
     }
 }
 
-//configurations {
-//    compileOnly {
-//        extendsFrom(configurations.annotationProcessor.get())
-//    }
-//}
-
 repositories {
 	mavenCentral()
 	mavenLocal()
+}
+
+tasks.named("compileJava") {
+	dependsOn(":global-exceptions:publishToMavenLocal")
+}
+
+tasks.named("compileJava") {
+	dependsOn(":security-lib:publishToMavenLocal")
 }
 
 // Конфигурация Checkstyle
