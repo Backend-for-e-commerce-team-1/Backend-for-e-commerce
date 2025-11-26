@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.practicum.masters.securitylib.service.JwtService;
 import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DuplicateUserException;
@@ -34,7 +35,7 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    private JwtService jwtService;
 
     @Mock
     private UserService userService;
@@ -66,7 +67,7 @@ class UserServiceImplTest {
                 List.of(role));
         newUserRequestDto = new RegisterRequest("john_doe", "john@example.com", "StrongPassword123");
         userDetails = new UserDetails(userId, "john_doe", "john@example.com", createdAt, null, List.of(role));
-        userService = new UserServiceImpl(userRepository, roleRepository, jwtTokenProvider, passwordEncoder, userMapper);
+        userService = new UserServiceImpl(userRepository, roleRepository, jwtService, passwordEncoder, userMapper);
     }
 
 
@@ -259,8 +260,8 @@ class UserServiceImplTest {
         claims.put("userId", user.getUserId().toString());
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
-        when(jwtTokenProvider.generateToken(claims, user.getEmail())).thenReturn("jwt-token");
-        when(jwtTokenProvider.getExpirationInSeconds()).thenReturn(3600L);
+        when(jwtService.generateToken(claims, user.getEmail())).thenReturn("jwt-token");
+        when(jwtService.getExpirationInSeconds()).thenReturn(3600L);
 
         // Выполнение тестируемого метода
         LoginResponse result = userServiceImpl.authenticate(authRequest);

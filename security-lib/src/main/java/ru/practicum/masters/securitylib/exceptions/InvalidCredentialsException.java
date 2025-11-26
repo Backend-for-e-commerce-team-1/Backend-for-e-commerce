@@ -1,4 +1,4 @@
-package ru.practikum.masters.securitylib.exceptions;
+package ru.practicum.masters.securitylib.exceptions;
 
 public class InvalidCredentialsException extends RuntimeException {
 

@@ -1,1 +1,1 @@
-rootProject.name = "securitylib"
+rootProject.name = "security-lib"

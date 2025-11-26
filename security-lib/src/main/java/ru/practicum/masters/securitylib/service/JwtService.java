@@ -1,13 +1,12 @@
-package ru.practikum.masters.securitylib.service;
+package ru.practicum.masters.securitylib.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.practikum.masters.securitylib.config.SecurityLibProperties;
-import ru.practikum.masters.securitylib.exceptions.InvalidCredentialsException;
+import ru.practicum.masters.securitylib.config.SecurityLibProperties;
+import ru.practicum.masters.securitylib.exceptions.InvalidCredentialsException;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -21,7 +20,7 @@ public class JwtService {
     private final SecurityLibProperties properties;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(properties.getSecret().getBytes());
+        return Keys.hmacShaKeyFor(properties.getJwtSecret().getBytes());
     }
 
     public String generateToken(Map<String, Object> claims, String subject) {
@@ -30,13 +29,13 @@ public class JwtService {
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + properties.getExpiration() * 1000))
+                .expiration(new Date(System.currentTimeMillis() + properties.getJwtExpiration() * 1000))
                 .signWith(getSigningKey())
                 .compact();
     }
 
     public Long getExpirationInSeconds() {
-        return properties.getExpiration();
+        return properties.getJwtExpiration();
     }
 
     /**

@@ -1,23 +1,19 @@
-package ru.practikum.masters.securitylib.filter;
+package ru.practicum.masters.securitylib.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.practikum.masters.securitylib.service.JwtService;
-import ru.practikum.masters.securitylib.service.ExcludeSecurityService;
+import ru.practicum.masters.securitylib.service.JwtService;
+import ru.practicum.masters.securitylib.service.ExcludeSecurityService;
 
 import java.io.IOException;
 import java.util.Collections;

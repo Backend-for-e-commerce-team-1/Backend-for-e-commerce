@@ -15,14 +15,14 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
-    }
-}
+//configurations {
+//    compileOnly {
+//        extendsFrom(configurations.annotationProcessor.get())
+//    }
+//}
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 	mavenLocal()
 }
 
@@ -36,6 +36,7 @@ checkstyle {
 
 dependencies {
 	implementation("ru.practicum.masters.exceptions:global-exceptions:0.0.1-SNAPSHOT")
+	implementation("ru.practicum.masters.securitylib:security-lib:0.0.1-SNAPSHOT")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
@@ -61,7 +62,6 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	implementation("ru.practicum.masters.securitylib:security-lib:0.0.1-SNAPSHOT")
 }
 
 // Настройка отчетов Checkstyle
@@ -81,5 +81,5 @@ tasks.register("checkstyleAll") {
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }
