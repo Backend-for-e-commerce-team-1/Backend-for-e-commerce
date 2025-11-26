@@ -2,6 +2,20 @@ server:
   port: 4569
 
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 2000ms
+      connect-timeout: 1000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 1000ms
   application:
     name: goods-service
   datasource:
@@ -11,12 +25,18 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
-
+  cache:
+    type: redis
+    redis:
+      key-prefix: "goods:"
+      time-to-live: 3600000
+      cache-null-values: false
+      use-key-prefix: true
 management:
   tracing:
     sampling:
@@ -38,6 +58,7 @@ management:
         enabled: true
         include: health, metrics, info
 
+
 opentelemetry:
   exporter:
     logging:
@@ -49,3 +70,4 @@ logging:
   level:
     io.opentelemetry.exporter.logging: DEBUG
     org.springframework.web: DEBUG
+    org.springframework.data.redis: DEBUG

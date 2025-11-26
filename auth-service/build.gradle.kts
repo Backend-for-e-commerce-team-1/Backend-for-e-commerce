@@ -64,6 +64,10 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+tasks.named("compileJava") {
+	dependsOn(":global-exceptions:publishToMavenLocal")
+}
+
 // Настройка отчетов Checkstyle
 tasks.withType<Checkstyle>().configureEach {
 	reports {
