@@ -89,12 +89,12 @@ public class UserServiceImpl implements UserService {
      * @return UserDto  пользователь
      */
     @Override
-    public UserDetails getUser(String token) {
+    public UserProfileResponse getUserProfile(String token) {
         User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
-        return userMapper.toUserDtoDetails(user);
+        return userMapper.toUserProfileResponse(user);
     }
 
     /**
@@ -106,7 +106,7 @@ public class UserServiceImpl implements UserService {
      */
     @Transactional
     @Override
-    public UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token) {
+    public UpdateUserResponseDto updateUserProfile(UpdateProfileRequest updateUser, String token) {
         //Извлекаем пользователя из токена
         User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
 

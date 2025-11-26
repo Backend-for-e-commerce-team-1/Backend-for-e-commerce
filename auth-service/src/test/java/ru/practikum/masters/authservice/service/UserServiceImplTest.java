@@ -329,7 +329,7 @@ class UserServiceImplTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Вызов тестируемого метода - получение информации о пользователе по токену
-        UserDetails result = userService.getUser(validToken);
+        UserProfileResponse result = userService.getUserProfile(validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
@@ -366,7 +366,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке получения информации выбрасывается исключение "не найден"
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userService.getUser(validToken)
+                () -> userService.getUserProfile(validToken)
         );
 
         // Проверяем сообщение об ошибке
@@ -396,7 +396,7 @@ class UserServiceImplTest {
     void shouldUpdateUserSuccessfully() {
         // Подготовка тестовых данных
         String validToken = "valid.jwt.token";
-        UpdateUserRequestDto updateRequest = new UpdateUserRequestDto("john_updated", "john_updated@example.com");
+        UpdateProfileRequest updateRequest = new UpdateProfileRequest("john_updated", "john_updated@example.com");
 
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем тестового пользователя
@@ -407,7 +407,7 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Вызов тестируемого метода - обновление информации о пользователе
-        UpdateUserResponseDto result = userService.updateUser(updateRequest, validToken);
+        UpdateUserResponseDto result = userService.updateUserProfile(updateRequest, validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
@@ -434,7 +434,7 @@ class UserServiceImplTest {
     void shouldThrowExceptionWhenUpdatedEmailAlreadyExists() {
         // Подготовка тестовых данных
         String validToken = "valid.jwt.token";
-        UpdateUserRequestDto updateRequest = new UpdateUserRequestDto("john_doe", "existing@example.com");
+        UpdateProfileRequest updateRequest = new UpdateProfileRequest("john_doe", "existing@example.com");
 
         // Создаем существующего пользователя с email, на который пытаемся поменять
         User existingUser = new User(
@@ -458,7 +458,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке обновления выбрасывается исключение
         DuplicateUserException exception = assertThrows(
                 DuplicateUserException.class,
-                () -> userService.updateUser(updateRequest, validToken)
+                () -> userService.updateUserProfile(updateRequest, validToken)
         );
 
         // Проверяем сообщение об ошибке
@@ -479,7 +479,7 @@ class UserServiceImplTest {
     void shouldThrowExceptionWhenUserToUpdateNotFound() {
         // Подготовка тестовых данных
         String validToken = "valid.jwt.token";
-        UpdateUserRequestDto updateRequest = new UpdateUserRequestDto("john_updated", "john_updated@example.com");
+        UpdateProfileRequest updateRequest = new UpdateProfileRequest("john_updated", "john_updated@example.com");
 
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем пользователя
@@ -490,7 +490,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке обновления выбрасывается исключение "не найден"
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userService.updateUser(updateRequest, validToken)
+                () -> userService.updateUserProfile(updateRequest, validToken)
         );
 
         // Проверяем сообщение об ошибке - должно содержать ID пользователя
