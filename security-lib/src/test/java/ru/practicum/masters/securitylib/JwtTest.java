@@ -1,12 +1,16 @@
-package ru.practicum.masters.securitylib;
-
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-//@Import(JwtTest.TestConfig.class)
-public class JwtTest {
-
+//package ru.practicum.masters.securitylib;
+//
+//import org.junit.jupiter.api.Nested;
+//import org.junit.jupiter.api.Test;
+//import org.springframework.boot.test.context.TestConfiguration;
+//import org.springframework.context.annotation.Bean;
+//import ru.practicum.masters.securitylib.filter.JwtAuthenticationFilter;
+//import ru.practicum.masters.securitylib.service.ExcludeSecurityService;
+//import ru.practicum.masters.securitylib.service.JwtService;
+//
+////@Import(JwtTest.TestConfig.class)
+//public class JwtTest {
+//
 //    @Nested
 //    @TestConfiguration
 //    class TestConfig {
@@ -25,67 +29,16 @@ public class JwtTest {
 //            return new JwtAuthenticationFilter(excludeSecurityService(properties), jwtService(properties));
 //        }
 //    }
-
-    @Test
-    void testJwtService() {
-//        // given
-//        ResourceNotFoundException exception = new ResourceNotFoundException("Ресурс не найден");
-//        MockHttpServletRequest request = new MockHttpServletRequest();
-//        request.setRequestURI("/someUrl");
 //
-//        // when
-//        GlobalExceptionHandler handler = new GlobalExceptionHandler(new GlobalExceptionsProperties());
-//        ErrorResponse response = handler.handleResourceNotFoundException(exception, request);
+//    @Test
+//    void testJwtService() {
+//    }
 //
-//        // then
-//        assertNotNull(response);
-//        assertEquals("NOT_FOUND", response.getStatus());
-//        assertEquals("Resource not found", response.getError());
-//        assertEquals("Ресурс не найден", response.getMessage());
-//        assertEquals("/someUrl", response.getPath());
-        assertTrue(true);
-        System.out.println("ResourceNotFoundException обрабатывается корректно!");
-    }
-
-    @Test
-    void testExcludeSecurityService() {
-//        // given
-//        DuplicateResourceException exception = new DuplicateResourceException("Дубликат ресурса");
-//        MockHttpServletRequest request = new MockHttpServletRequest();
-//        request.setRequestURI("/someUrl");
+//    @Test
+//    void testExcludeSecurityService() {
+//    }
 //
-//        // when
-//        GlobalExceptionHandler handler = new GlobalExceptionHandler(new GlobalExceptionsProperties());
-//        ErrorResponse response = handler.handleDuplicateResourceException(exception, request);
-//
-//        // then
-//        assertNotNull(response);
-//        assertEquals("CONFLICT", response.getStatus());
-//        assertEquals("Resource already exists", response.getError());
-//        assertEquals("Дубликат ресурса", response.getMessage());
-//        assertEquals("/someUrl", response.getPath());
-        assertTrue(true);
-        System.out.println("DuplicateResourceException обрабатывается корректно!");
-    }
-
-    @Test
-    void testJwtAuthenticationFilter() {
-//        // given
-//        DuplicateResourceException exception = new DuplicateResourceException("Дубликат ресурса");
-//        MockHttpServletRequest request = new MockHttpServletRequest();
-//        request.setRequestURI("/someUrl");
-//
-//        // when
-//        GlobalExceptionHandler handler = new GlobalExceptionHandler(new GlobalExceptionsProperties());
-//        ErrorResponse response = handler.handleDuplicateResourceException(exception, request);
-//
-//        // then
-//        assertNotNull(response);
-//        assertEquals("CONFLICT", response.getStatus());
-//        assertEquals("Resource already exists", response.getError());
-//        assertEquals("Дубликат ресурса", response.getMessage());
-//        assertEquals("/someUrl", response.getPath());
-        assertTrue(true);
-        System.out.println("DuplicateResourceException обрабатывается корректно!");
-    }
-}
+//    @Test
+//    void testJwtAuthenticationFilter() {
+//    }
+//}

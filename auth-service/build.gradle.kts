@@ -15,6 +15,12 @@ java {
     }
 }
 
+configurations {
+	compileOnly {
+		extendsFrom(configurations.annotationProcessor.get())
+	}
+}
+
 repositories {
 	mavenCentral()
 	mavenLocal()
