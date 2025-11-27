@@ -1,40 +1,37 @@
-package ru.practikum.masters.authservice.config;
+package ru.practicum.masters.securitylib.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.practikum.masters.authservice.model.User;
-import ru.practikum.masters.authservice.service.JwtTokenProvider;
+import ru.practicum.masters.securitylib.service.JwtService;
+import ru.practicum.masters.securitylib.service.ExcludeSecurityService;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final int BEARER_PREFIX_LENGTH = "Bearer ".length();
-    private final JwtTokenProvider jwtTokenProvider;
+    private final ExcludeSecurityService excludeSecurityService;
+    private final JwtService jwtService;
 
-    private final RestTemplateBuilder restTemplateBuilder;
 
-    @Value("${app.security.public-endpoints}")
-    private String[] publicEndpoints;
+    @Autowired
+    public JwtAuthenticationFilter(ExcludeSecurityService excludeSecurityService, JwtService jwtService) {
+        this.excludeSecurityService = excludeSecurityService;
+        this.jwtService = jwtService;
+    }
 
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -43,14 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String path = request.getServletPath();
-
         // Пропускаем публичные эндпоинты
-        if (isPublicEndpoint(path)) {
+        final String path = request.getServletPath();
+        if (excludeSecurityService.isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
             return;
         }
-
         final String authHeader = request.getHeader("Authorization");
 
         // Если нет заголовка Authorization или он не начинается с "Bearer ", возвращаем 401
@@ -64,19 +59,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Извлекаем токен (убираем "Bearer ")
             String jwt = authHeader.substring(BEARER_PREFIX_LENGTH);
 
-            // Извлекаем пользователя из токена
-            User user = jwtTokenProvider.getUsernameFromToken(jwt);
-
-            // Преобразуем роли пользователя в GrantedAuthority
-            List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                    .map(role -> new SimpleGrantedAuthority(role.getRoleName().toString()))
-                    .toList();
+            // Извлекаем cвойства пользователя из токена
+            var claims = jwtService.validateToken(jwt);
 
             // Создаем объект аутентификации для Spring Security
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    user,
+                    claims,
                     null,
-                    authorities);
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            );
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             // Устанавливаем аутентификацию в контекст Security
@@ -92,17 +83,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-    /**
-     * Является ли endpoint публичным
-     * Список публичных endpoints лежит в файле application.yaml
-     *
-     * @param path String
-     * @return boolean
-     */
-    private boolean isPublicEndpoint(String path) {
-        return Arrays.stream(publicEndpoints)
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
-    }
-
 }

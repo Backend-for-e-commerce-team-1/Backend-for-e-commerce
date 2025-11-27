@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.practicum.masters.securitylib.service.JwtService;
 import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DuplicateUserException;
@@ -20,9 +21,7 @@ import ru.practikum.masters.authservice.repository.RoleRepository;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +35,10 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    private JwtService jwtService;
+
+    @Mock
+    private UserService userService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -47,7 +49,7 @@ class UserServiceImplTest {
     private UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserServiceImpl userServiceImpl;
 
     private User user;
     private UserDetails userDetails;
@@ -65,7 +67,7 @@ class UserServiceImplTest {
                 List.of(role));
         newUserRequestDto = new RegisterRequest("john_doe", "john@example.com", "StrongPassword123");
         userDetails = new UserDetails(userId, "john_doe", "john@example.com", createdAt, null, List.of(role));
-        userService = new UserServiceImpl(userRepository, roleRepository, jwtTokenProvider, passwordEncoder, userMapper);
+        userService = new UserServiceImpl(userRepository, roleRepository, jwtService, passwordEncoder, userMapper);
     }
 
 
@@ -92,7 +94,7 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Вызов тестируемого метода - регистрация нового пользователя
-        RegisterResponse result = userService.registerUser(newUserRequestDto);
+        RegisterResponse result = userServiceImpl.registerUser(newUserRequestDto);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
@@ -137,7 +139,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке регистрации выбрасывается исключение
         DuplicateUserException exception = assertThrows(
                 DuplicateUserException.class,
-                () -> userService.registerUser(newUserRequestDto)
+                () -> userServiceImpl.registerUser(newUserRequestDto)
         );
 
         // Проверяем сообщение об ошибке
@@ -176,7 +178,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке регистрации выбрасывается исключение
         DuplicateUserException exception = assertThrows(
                 DuplicateUserException.class,
-                () -> userService.registerUser(newUserRequestDto)
+                () -> userServiceImpl.registerUser(newUserRequestDto)
         );
 
         // Проверяем сообщение об ошибке
@@ -215,7 +217,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке регистрации выбрасывается исключение
         DuplicateUserException exception = assertThrows(
                 DuplicateUserException.class,
-                () -> userService.registerUser(newUserRequestDto)
+                () -> userServiceImpl.registerUser(newUserRequestDto)
         );
 
         // Проверяем, что исключение связано с email
@@ -254,11 +256,15 @@ class UserServiceImplTest {
         // - При запросе времени жизни токена возвращаем 3600 секунд
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("StrongPassword123", "StrongPassword123")).thenReturn(true);
-        when(jwtTokenProvider.generateToken(user)).thenReturn("jwt-token");
-        when(jwtTokenProvider.getExpirationInSeconds()).thenReturn(3600L);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId().toString());
+        claims.put("username", user.getUsername());
+        claims.put("email", user.getEmail());
+        when(jwtService.generateToken(claims, user.getEmail())).thenReturn("jwt-token");
+        when(jwtService.getExpirationInSeconds()).thenReturn(3600L);
 
         // Выполнение тестируемого метода
-        LoginResponse result = userService.authenticate(authRequest);
+        LoginResponse result = userServiceImpl.authenticate(authRequest);
 
         // Проверка результатов:
         // - Убеждаемся, что возвращен корректный JWT токен
@@ -281,7 +287,7 @@ class UserServiceImplTest {
         when(userRepository.findByEmail("wrong@example.com")).thenReturn(Optional.empty());
 
         // Проверка, что при вызове метода аутентификации выбрасывается ожидаемое исключение
-        assertThrows(AuthenticationException.class, () -> userService.authenticate(authRequest));
+        assertThrows(AuthenticationException.class, () -> userServiceImpl.authenticate(authRequest));
     }
 
     /**
@@ -300,7 +306,7 @@ class UserServiceImplTest {
         when(passwordEncoder.matches("WrongPassword", "StrongPassword123")).thenReturn(false);
 
         // Проверка, что при неверном пароле выбрасывается исключение аутентификации
-        assertThrows(AuthenticationException.class, () -> userService.authenticate(authRequest));
+        assertThrows(AuthenticationException.class, () -> userServiceImpl.authenticate(authRequest));
     }
 
 
@@ -325,7 +331,7 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем тестового пользователя
         // - При поиске пользователя в репозитории по ID возвращаем существующего пользователя
-        when(jwtTokenProvider.getUsernameFromToken(validToken)).thenReturn(user);
+        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Вызов тестируемого метода - получение информации о пользователе по токену
@@ -343,7 +349,7 @@ class UserServiceImplTest {
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что извлечение пользователя из токена было вызвано один раз
         // - Убеждаемся, что поиск пользователя в репозитории по ID был выполнен
-        verify(jwtTokenProvider, times(1)).getUsernameFromToken(validToken);
+        verify(userService, times(1)).getUsernameFromToken(validToken);
         verify(userRepository, times(1)).findById(userId);
     }
 
@@ -360,13 +366,13 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем пользователя
         // - При поиске пользователя в репозитории возвращаем пустой Optional (пользователь не найден)
-        when(jwtTokenProvider.getUsernameFromToken(validToken)).thenReturn(user);
+        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Проверяем, что при попытке получения информации выбрасывается исключение "не найден"
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userService.getUserProfile(validToken)
+                () -> userServiceImpl.getUserProfile(validToken)
         );
 
         // Проверяем сообщение об ошибке
@@ -376,7 +382,7 @@ class UserServiceImplTest {
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что извлечение пользователя из токена было выполнено
         // - Убеждаемся, что поиск в репозитории был выполнен
-        verify(jwtTokenProvider, times(1)).getUsernameFromToken(validToken);
+        verify(userService, times(1)).getUsernameFromToken(validToken);
         verify(userRepository, times(1)).findById(userId);
     }
 
@@ -402,12 +408,13 @@ class UserServiceImplTest {
         // - При извлечении пользователя из токена возвращаем тестового пользователя
         // - При поиске пользователя в репозитории возвращаем существующего пользователя
         // - При сохранении пользователя возвращаем обновленную версию
-        when(jwtTokenProvider.getUsernameFromToken(validToken)).thenReturn(user);
+        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Вызов тестируемого метода - обновление информации о пользователе
-        UpdateUserResponseDto result = userService.updateUserProfile(updateRequest, validToken);
+
+        UpdateUserResponseDto result = userServiceImpl.updateUserProfile(updateRequest, validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
@@ -419,7 +426,7 @@ class UserServiceImplTest {
         // - Убеждаемся, что поиск пользователя в репозитории был выполнен
         // - Убеждаемся, что проверка уникальности данных была выполнена
         // - Убеждаемся, что сохранение пользователя было выполнено
-        verify(jwtTokenProvider, times(1)).getUsernameFromToken(validToken);
+        verify(userService, times(1)).getUsernameFromToken(validToken);
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).findAll();
         verify(userRepository, times(1)).save(any(User.class));
@@ -451,14 +458,14 @@ class UserServiceImplTest {
         // - При извлечении пользователя из токена возвращаем тестового пользователя
         // - При поиске пользователя в репозитории возвращаем существующего пользователя
         // - При запросе всех пользователей возвращаем список с конфликтующим пользователем
-        when(jwtTokenProvider.getUsernameFromToken(validToken)).thenReturn(user);
+        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.findAll()).thenReturn(List.of(existingUser));
 
         // Проверяем, что при попытке обновления выбрасывается исключение
         DuplicateUserException exception = assertThrows(
                 DuplicateUserException.class,
-                () -> userService.updateUserProfile(updateRequest, validToken)
+                () -> userServiceImpl.updateUserProfile(updateRequest, validToken)
         );
 
         // Проверяем сообщение об ошибке
@@ -484,7 +491,7 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем пользователя
         // - При поиске пользователя в репозитории возвращаем пустой Optional (пользователь не найден)
-        when(jwtTokenProvider.getUsernameFromToken(validToken)).thenReturn(user);
+        when(userServiceImpl.getUsernameFromToken(validToken)).thenReturn(user);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Проверяем, что при попытке обновления выбрасывается исключение "не найден"

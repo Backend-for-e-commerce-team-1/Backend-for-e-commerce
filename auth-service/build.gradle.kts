@@ -3,7 +3,6 @@ plugins {
 	id("org.springframework.boot") version "3.5.7"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("checkstyle")
-
 }
 
 group = "ru.practikum.masters"
@@ -17,14 +16,22 @@ java {
 }
 
 configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
-    }
+	compileOnly {
+		extendsFrom(configurations.annotationProcessor.get())
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 	mavenLocal()
+}
+
+tasks.named("compileJava") {
+	dependsOn(":global-exceptions:publishToMavenLocal")
+}
+
+tasks.named("compileJava") {
+	dependsOn(":security-lib:publishToMavenLocal")
 }
 
 // Конфигурация Checkstyle
@@ -37,6 +44,7 @@ checkstyle {
 
 dependencies {
 	implementation("ru.practicum.masters.exceptions:global-exceptions:0.0.1-SNAPSHOT")
+	implementation("ru.practicum.masters.securitylib:security-lib:0.0.1-SNAPSHOT")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
@@ -85,5 +93,5 @@ tasks.register("checkstyleAll") {
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }

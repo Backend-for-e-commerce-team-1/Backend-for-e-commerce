@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.masters.securitylib.service.JwtService;
 import ru.practikum.masters.authservice.dto.*;
 import ru.practikum.masters.authservice.exception.AuthenticationException;
 import ru.practikum.masters.authservice.exception.DuplicateUserException;
@@ -17,10 +18,7 @@ import ru.practikum.masters.authservice.repository.RoleRepository;
 import ru.practikum.masters.authservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -29,7 +27,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -70,8 +68,14 @@ public class UserServiceImpl implements UserService {
         User user = authenticate(authUserDto.getEmail(), authUserDto.getPassword());
 
         // Генерируем JWT токен
-        String token = jwtTokenProvider.generateToken(user);
-        Long expiresIn = jwtTokenProvider.getExpirationInSeconds();
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId().toString());
+        claims.put("username", user.getUsername());
+        claims.put("email", user.getEmail());
+        claims.put("roles", user.getRoles());
+
+        String token = jwtService.generateToken(claims, user.getEmail());
+        Long expiresIn = jwtService.getExpirationInSeconds();
 
         // Собираем ответ
         LoginResponse authUserResponseDto = new LoginResponse();
@@ -90,7 +94,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserProfileResponse getUserProfile(String token) {
-        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
+        User userFromToken = getUsernameFromToken(token);
         User user = userRepository.findById(userFromToken.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь c id: " + userFromToken.getUserId()
                         + " не найден в системе"));
@@ -108,7 +112,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UpdateUserResponseDto updateUserProfile(UpdateProfileRequest updateUser, String token) {
         //Извлекаем пользователя из токена
-        User userFromToken = jwtTokenProvider.getUsernameFromToken(token);
+        User userFromToken = getUsernameFromToken(token);
 
         //Находим пользователя в базе
         User oldUser = userRepository.findById(userFromToken.getUserId())
@@ -127,6 +131,28 @@ public class UserServiceImpl implements UserService {
         UpdateUserResponseDto updateUserResponseDto = userMapper.toUpdateResponseFromUser(updatedUser);
         updateUserResponseDto.setUpdatedAt(updateAt);
         return updateUserResponseDto;
+    }
+
+    /**
+     * Проверяем токен и если он валидный,
+     * извлекаем информацию о пользователе
+     *
+     * @param token - string
+     * @return - User
+     */
+    public User getUsernameFromToken(String token) {
+        User user = new User();
+        var claims = jwtService.validateToken(token);
+        user.setUserId(UUID.fromString(claims.get("userId", String.class)));
+        user.setEmail(claims.get("email", String.class));
+        user.setUsername(claims.get("username", String.class));
+
+        //Извлечение списка ролей
+        List<?> roleList = claims.get("roles", List.class);
+        List<Role> roles = convertToRoleList(roleList);
+        user.setRoles(roles);
+
+        return user;
     }
 
     /**
@@ -175,6 +201,30 @@ public class UserServiceImpl implements UserService {
     private Role getRole(RoleType role) {
         return roleRepository.findByRoleName(role)
                 .orElseThrow(() -> new NotFoundException("Роль  '" + role + "' не найдена в системе."));
+    }
+
+    /**
+     * Конвертация списка ролей из токена в коллекцию объектов Role
+     *
+     * @param rawList List
+     * @return List role
+     */
+    private List<Role> convertToRoleList(List<?> rawList) {
+        Role role = new Role();
+        if (rawList == null) {
+            return Collections.emptyList();
+        }
+
+        List<Role> roles = new ArrayList<>();
+        for (Object item : rawList) {
+            if (item instanceof String) {
+                role.setRoleName(RoleType.valueOf((String) item));
+                roles.add(role);
+            } else if (item instanceof Role) {
+                roles.add((Role) item);
+            }
+        }
+        return (roles);
     }
 
 }

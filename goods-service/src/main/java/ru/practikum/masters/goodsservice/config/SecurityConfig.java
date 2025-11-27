@@ -1,4 +1,4 @@
-package ru.practikum.masters.authservice.config;
+package ru.practikum.masters.goodsservice.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

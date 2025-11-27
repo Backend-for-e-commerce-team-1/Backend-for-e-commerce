@@ -20,6 +20,10 @@ repositories {
     mavenLocal()
 }
 
+tasks.named("compileJava") {
+    dependsOn(":global-exceptions:publishToMavenLocal")
+}
+
 // Конфигурация Checkstyle
 checkstyle {
     toolVersion = "10.12.5"
