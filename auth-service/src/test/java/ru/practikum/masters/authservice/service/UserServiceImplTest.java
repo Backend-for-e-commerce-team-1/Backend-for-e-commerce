@@ -372,8 +372,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке получения информации выбрасывается исключение "не найден"
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userServiceImpl.getUser(validToken)
-                () -> userService.getUserProfile(validToken)
+                () -> userServiceImpl.getUserProfile(validToken)
         );
 
         // Проверяем сообщение об ошибке
@@ -414,8 +413,8 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Вызов тестируемого метода - обновление информации о пользователе
-        UpdateUserResponseDto result = userServiceImpl.updateUser(updateRequest, validToken);
-        UpdateUserResponseDto result = userService.updateUserProfile(updateRequest, validToken);
+
+        UpdateUserResponseDto result = userServiceImpl.updateUserProfile(updateRequest, validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
@@ -466,8 +465,7 @@ class UserServiceImplTest {
         // Проверяем, что при попытке обновления выбрасывается исключение
         DuplicateUserException exception = assertThrows(
                 DuplicateUserException.class,
-                () -> userServiceImpl.updateUser(updateRequest, validToken)
-                () -> userService.updateUserProfile(updateRequest, validToken)
+                () -> userServiceImpl.updateUserProfile(updateRequest, validToken)
         );
 
         // Проверяем сообщение об ошибке
@@ -493,13 +491,12 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем пользователя
         // - При поиске пользователя в репозитории возвращаем пустой Optional (пользователь не найден)
-        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
+        when(userServiceImpl.getUsernameFromToken(validToken)).thenReturn(user);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Проверяем, что при попытке обновления выбрасывается исключение "не найден"
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userServiceImpl.updateUser(updateRequest, validToken)
                 () -> userService.updateUserProfile(updateRequest, validToken)
         );
 
