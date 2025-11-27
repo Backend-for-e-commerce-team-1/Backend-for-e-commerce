@@ -39,20 +39,20 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public UserDetails getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
+    public UserProfileResponse getUser(@RequestHeader(name = "Authorization", required = false) String authToken) {
         log.info("Поступил запрос GET: /users/profile");
         String token = extractTokenFromHeader(authToken);
-        UserDetails userDetails = userService.getUser(token);
-        log.info("Профиль пользователя {} найден в системе.", userDetails.getEmail());
-        return userDetails;
+        UserProfileResponse userProfile = userService.getUserProfile(token);
+        log.info("Профиль пользователя {} найден в системе.", userProfile.getEmail());
+        return userProfile;
     }
 
     @PutMapping("/profile")
     public UpdateUserResponseDto updateUser(@RequestHeader(name = "Authorization") String authToken,
-                                            @RequestBody @Valid UpdateUserRequestDto updateUser) {
+                                            @RequestBody @Valid UpdateProfileRequest updateUser) {
         log.info("Поступил запрос PUT: /users/profile на редактирование пользователя {}.", updateUser.getEmail());
         String token = extractTokenFromHeader(authToken);
-        UpdateUserResponseDto userDto = userService.updateUser(updateUser, token);
+        UpdateUserResponseDto userDto = userService.updateUserProfile(updateUser, token);
         log.info("Профиль пользователя {} успешно обновлен в системе.", updateUser.getEmail());
         return userDto;
     }

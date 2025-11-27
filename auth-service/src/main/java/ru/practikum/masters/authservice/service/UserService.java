@@ -9,9 +9,9 @@ public interface UserService {
 
     LoginResponse authenticate(LoginRequest authUserDto);
 
-    UserDetails getUser(String token);
+    UserProfileResponse getUserProfile(String token);
 
-    UpdateUserResponseDto updateUser(UpdateUserRequestDto updateUser, String token);
+    UpdateUserResponseDto updateUserProfile(UpdateProfileRequest updateUser, String token);
 
     User getUsernameFromToken(String token);
 }
