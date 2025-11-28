@@ -9,6 +9,12 @@ spring:
 server:
   port: 8084
 
+app:
+  security:
+    jwt-secret: c0382cfa-92ca-4c88-8c67-17f5e60dd71c
+    jwt-expiration: 3600
+    public-endpoints: "/actuator/health,/actuator/info"
+
 logging:
   level:
     org.springframework: INFO
