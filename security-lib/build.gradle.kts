@@ -16,12 +16,6 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
-    }
-}
-
 repositories {
     mavenCentral()
     mavenLocal()
@@ -70,7 +64,7 @@ tasks.bootJar{
 }
 
 tasks.jar{
-    enabled = false
+    enabled = true
     archiveBaseName = "security-lib-starter"
 }
 
@@ -86,7 +80,7 @@ publishing {
 }
 
 tasks.register("copyJarToLibs", Copy::class) {
-    from("${rootProject.projectDir}/jar")
+    from("jar")
     into("${rootProject.projectDir}/libs")
     dependsOn()
 }

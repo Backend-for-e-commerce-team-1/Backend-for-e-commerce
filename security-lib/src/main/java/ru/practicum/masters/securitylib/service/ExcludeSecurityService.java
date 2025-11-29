@@ -26,6 +26,8 @@ public class ExcludeSecurityService {
      * @return boolean
      */
     public boolean isPublicEndpoint(String path) {
+        log.info("ExcludeSecurityService isPublicEndpoint check url:"+path);
+
         return Arrays.stream(properties.getPublicEndpoints())
                 .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }

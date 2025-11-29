@@ -35,8 +35,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(request ->
-                                excludeSecurityService.isPublicEndpoint(request.getPathInfo()))
+                        .requestMatchers(
+                                request -> excludeSecurityService.isPublicEndpoint(request.getRequestURI()))
                         .permitAll()
                         .anyRequest().authenticated()
                 )
