@@ -103,6 +103,32 @@ services:
     volumes:
       - pgdata_goods:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: cart-redis
+    networks:
+      - monitoring
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  cart-service:
+    build: cart-service
+    ports:
+      - "8003:8084"
+    environment:
+      - SPRING_REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - monitoring
+
+
 networks:
   monitoring:
     driver: bridge
