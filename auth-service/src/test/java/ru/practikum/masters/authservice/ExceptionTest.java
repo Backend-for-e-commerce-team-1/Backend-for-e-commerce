@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.context.ActiveProfiles;
 import ru.practicum.masters.exceptions.ErrorResponse;
 import ru.practicum.masters.exceptions.GlobalExceptionHandler;
 import ru.practicum.masters.exceptions.config.GlobalExceptionsProperties;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Import(ExceptionTest.TestConfig.class)
 public class ExceptionTest {
 
