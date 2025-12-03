@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.practicum.masters.securitylib.service.JwtService;
@@ -38,14 +39,12 @@ class UserServiceImplTest {
     private JwtService jwtService;
 
     @Mock
-    private UserService userService;
-
-    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
     private RoleRepository roleRepository;
 
+    @Spy
     private UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
     @InjectMocks
@@ -67,13 +66,13 @@ class UserServiceImplTest {
                 List.of(role));
         newUserRequestDto = new RegisterRequest("john_doe", "john@example.com", "StrongPassword123");
         userDetails = new UserDetails(userId, "john_doe", "john@example.com", createdAt, null, List.of(role));
-        userService = new UserServiceImpl(userRepository, roleRepository, jwtService, passwordEncoder, userMapper);
+        userServiceImpl = new UserServiceImpl(userRepository, roleRepository, jwtService, passwordEncoder, userMapper);
     }
 
 
     /* -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
-     *  userService.addUser
+     *  userServiceImpl.addUser
      * -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
      */
@@ -233,7 +232,7 @@ class UserServiceImplTest {
 
     /* -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
-     *  userService.authUser
+     *  userServiceImpl.authUser
      * -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
      */
@@ -260,6 +259,7 @@ class UserServiceImplTest {
         claims.put("userId", user.getUserId().toString());
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
+        claims.put("roles", user.getRoles());
         when(jwtService.generateToken(claims, user.getEmail())).thenReturn("jwt-token");
         when(jwtService.getExpirationInSeconds()).thenReturn(3600L);
 
@@ -312,7 +312,7 @@ class UserServiceImplTest {
 
     /* -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
-     *  userService.getUser
+     *  userServiceImpl.getUser
      * -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
      */
@@ -331,11 +331,19 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем тестового пользователя
         // - При поиске пользователя в репозитории по ID возвращаем существующего пользователя
-        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
+        //when(userServiceImpl.getUsernameFromToken(validToken)).thenReturn(user);
+
+        io.jsonwebtoken.Claims mockClaims = mock(io.jsonwebtoken.Claims.class);
+        when(jwtService.validateToken(validToken)).thenReturn(mockClaims);
+        when(mockClaims.get("userId", String.class)).thenReturn(userId.toString());
+        when(mockClaims.get("email", String.class)).thenReturn("john@example.com");
+        when(mockClaims.get("username", String.class)).thenReturn("john_doe");
+        when(mockClaims.get("roles", List.class)).thenReturn(List.of("ROLE_USER"));
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Вызов тестируемого метода - получение информации о пользователе по токену
-        UserProfileResponse result = userService.getUserProfile(validToken);
+        UserProfileResponse result = userServiceImpl.getUserProfile(validToken);
 
         // Проверки результатов:
         // - Убеждаемся, что результат не null
@@ -349,7 +357,7 @@ class UserServiceImplTest {
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что извлечение пользователя из токена было вызвано один раз
         // - Убеждаемся, что поиск пользователя в репозитории по ID был выполнен
-        verify(userService, times(1)).getUsernameFromToken(validToken);
+        verify(jwtService, times(1)).validateToken(validToken);
         verify(userRepository, times(1)).findById(userId);
     }
 
@@ -366,7 +374,16 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем пользователя
         // - При поиске пользователя в репозитории возвращаем пустой Optional (пользователь не найден)
-        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
+        // when(userServiceImpl.getUsernameFromToken(validToken)).thenReturn(user);
+
+        io.jsonwebtoken.Claims mockClaims = mock(io.jsonwebtoken.Claims.class);
+        when(jwtService.validateToken(validToken)).thenReturn(mockClaims);
+        when(mockClaims.get("userId", String.class)).thenReturn(userId.toString());
+        when(mockClaims.get("email", String.class)).thenReturn("john@example.com");
+        when(mockClaims.get("username", String.class)).thenReturn("john_doe");
+        when(mockClaims.get("roles", List.class)).thenReturn(List.of("ROLE_USER"));
+
+
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Проверяем, что при попытке получения информации выбрасывается исключение "не найден"
@@ -382,13 +399,13 @@ class UserServiceImplTest {
         // Проверка вызовов зависимостей:
         // - Убеждаемся, что извлечение пользователя из токена было выполнено
         // - Убеждаемся, что поиск в репозитории был выполнен
-        verify(userService, times(1)).getUsernameFromToken(validToken);
+        verify(jwtService, times(1)).validateToken(validToken);
         verify(userRepository, times(1)).findById(userId);
     }
 
     /* -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
-     *  userService.updateUser
+     *  userServiceImpl.updateUser
      * -------------------------------------------------------------------------
      * -------------------------------------------------------------------------
      */
@@ -408,7 +425,14 @@ class UserServiceImplTest {
         // - При извлечении пользователя из токена возвращаем тестового пользователя
         // - При поиске пользователя в репозитории возвращаем существующего пользователя
         // - При сохранении пользователя возвращаем обновленную версию
-        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
+
+        io.jsonwebtoken.Claims mockClaims = mock(io.jsonwebtoken.Claims.class);
+        when(jwtService.validateToken(validToken)).thenReturn(mockClaims);
+        when(mockClaims.get("userId", String.class)).thenReturn(userId.toString());
+        when(mockClaims.get("email", String.class)).thenReturn("john@example.com");
+        when(mockClaims.get("username", String.class)).thenReturn("john_doe");
+        when(mockClaims.get("roles", List.class)).thenReturn(List.of("ROLE_USER"));
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
@@ -426,7 +450,7 @@ class UserServiceImplTest {
         // - Убеждаемся, что поиск пользователя в репозитории был выполнен
         // - Убеждаемся, что проверка уникальности данных была выполнена
         // - Убеждаемся, что сохранение пользователя было выполнено
-        verify(userService, times(1)).getUsernameFromToken(validToken);
+        verify(jwtService, times(1)).validateToken(validToken);
         verify(userRepository, times(1)).findById(userId);
         verify(userRepository, times(1)).findAll();
         verify(userRepository, times(1)).save(any(User.class));
@@ -458,7 +482,14 @@ class UserServiceImplTest {
         // - При извлечении пользователя из токена возвращаем тестового пользователя
         // - При поиске пользователя в репозитории возвращаем существующего пользователя
         // - При запросе всех пользователей возвращаем список с конфликтующим пользователем
-        when(userService.getUsernameFromToken(validToken)).thenReturn(user);
+
+        io.jsonwebtoken.Claims mockClaims = mock(io.jsonwebtoken.Claims.class);
+        when(jwtService.validateToken(validToken)).thenReturn(mockClaims);
+        when(mockClaims.get("userId", String.class)).thenReturn(userId.toString());
+        when(mockClaims.get("email", String.class)).thenReturn("john@example.com");
+        when(mockClaims.get("username", String.class)).thenReturn("john_doe");
+        when(mockClaims.get("roles", List.class)).thenReturn(List.of("ROLE_USER"));
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.findAll()).thenReturn(List.of(existingUser));
 
@@ -491,13 +522,19 @@ class UserServiceImplTest {
         // Настройка поведения мок-объектов:
         // - При извлечении пользователя из токена возвращаем пользователя
         // - При поиске пользователя в репозитории возвращаем пустой Optional (пользователь не найден)
-        when(userServiceImpl.getUsernameFromToken(validToken)).thenReturn(user);
+        io.jsonwebtoken.Claims mockClaims = mock(io.jsonwebtoken.Claims.class);
+        when(jwtService.validateToken(validToken)).thenReturn(mockClaims);
+        when(mockClaims.get("userId", String.class)).thenReturn(userId.toString());
+        when(mockClaims.get("email", String.class)).thenReturn("john@example.com");
+        when(mockClaims.get("username", String.class)).thenReturn("john_doe");
+        when(mockClaims.get("roles", List.class)).thenReturn(List.of("ROLE_USER"));
+
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Проверяем, что при попытке обновления выбрасывается исключение "не найден"
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> userService.updateUserProfile(updateRequest, validToken)
+                () -> userServiceImpl.updateUserProfile(updateRequest, validToken)
         );
 
         // Проверяем сообщение об ошибке - должно содержать ID пользователя

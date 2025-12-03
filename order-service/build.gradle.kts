@@ -27,7 +27,7 @@ tasks.named("compileJava") {
 // Конфигурация Checkstyle
 checkstyle {
     toolVersion = "10.12.5"
-    configFile = file("${rootDir}/checkstyle.xml")
+    configFile = file("${project.projectDir}/checkstyle.xml")
     isIgnoreFailures = true
     maxWarnings = 0
 }
@@ -57,7 +57,7 @@ tasks.withType<Checkstyle>().configureEach {
     reports {
         xml.required.set(false)
         html.required.set(true)
-        html.outputLocation.set(file("${buildDir}/reports/checkstyle/${name}.html"))
+        html.outputLocation.set(layout.buildDirectory.file("reports/checkstyle/${name}.html"))
     }
 }
 
