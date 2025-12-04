@@ -11,23 +11,24 @@ import java.util.concurrent.TimeUnit;
 @Repository
 @RequiredArgsConstructor
 public class CartRepository {
+
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private String getCartKey(UUID userId) {
+    public String getCartKey(UUID userId) {
         return "cart:" + userId.toString();
     }
 
-    public void saveCart(Cart cart) {
+    public void save(Cart cart) {
         String key = getCartKey(cart.getUserId());
         redisTemplate.opsForValue().set(key, cart, 7, TimeUnit.DAYS);
     }
 
-    public Cart findCartByUserId(UUID userId) {
+    public Cart findByUserId(UUID userId) {
         String key = getCartKey(userId);
         return (Cart) redisTemplate.opsForValue().get(key);
     }
 
-    public void deleteCart(UUID userId) {
+    public void deleteByUserId(UUID userId) {
         String key = getCartKey(userId);
         redisTemplate.delete(key);
     }

@@ -1,20 +1,30 @@
 package ru.practikum.masters.cartservice.model;
 
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItem {
-    private UUID productId;
-    private String name;
-    private Double price;
-    private Integer quantity;
+
+    UUID id;
+
+    UUID productId;
+
+    String name;
+
+    Double price;
+
+    Integer quantity;
+
+    Double getTotalPrice() {
+        return price * quantity;
+    }
+
 }

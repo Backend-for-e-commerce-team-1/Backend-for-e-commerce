@@ -1,14 +1,34 @@
 package ru.practikum.masters.cartservice.model;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Cart {
-    private UUID userId;
-    private Map<Long, Integer> items = new HashMap<>();
-    private Double totalPrice;
+
+    UUID id;
+
+    UUID userId;
+
+    Map<UUID, CartItem> items = new HashMap<>();
+
+    LocalDateTime lastUpdated;
+
+    public double getTotalAmount() {
+        return items.values()
+                .stream()
+                .mapToDouble(x -> x.getTotalPrice())
+                .sum();
+    }
+
 }
