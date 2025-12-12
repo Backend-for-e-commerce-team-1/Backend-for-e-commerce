@@ -10,22 +10,28 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.practicum.masters.securitylib.filter.JwtAuthenticationFilter;
+import ru.practicum.masters.securitylib.service.ExcludeSecurityService;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtAuthenticationFilter jwtAuthFilter;
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ExcludeSecurityService excludeSecurityService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().authenticated() // Все endpoints требуют аутентификации
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(
+                                request -> excludeSecurityService.isPublicEndpoint(request.getRequestURI()))
+                        .permitAll()
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
