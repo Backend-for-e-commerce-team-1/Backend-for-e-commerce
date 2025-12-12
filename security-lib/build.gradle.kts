@@ -60,7 +60,7 @@ tasks.test {
 }
 
 tasks.bootJar{
-    enabled = false
+    enabled = true
 }
 
 tasks.jar{

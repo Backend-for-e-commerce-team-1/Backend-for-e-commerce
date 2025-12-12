@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import ru.practicum.masters.securitylib.filter.JwtAuthenticationFilter;
 import ru.practicum.masters.securitylib.service.ExcludeSecurityService;
 import ru.practicum.masters.securitylib.service.JwtService;
+import ru.practicum.masters.securitylib.service.SecurityContextService;
 
 @Configuration
 @EnableConfigurationProperties(ru.practicum.masters.securitylib.config.SecurityLibProperties.class)
@@ -26,6 +27,12 @@ public class SecurityLibAutoConfiguration {
     @ConditionalOnMissingBean
     public ExcludeSecurityService excludeSecurityService(SecurityLibProperties properties) {
         return new ExcludeSecurityService(properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SecurityContextService securityContextService() {
+        return new SecurityContextService();
     }
 
     @Bean
