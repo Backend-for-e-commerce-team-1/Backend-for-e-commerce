@@ -43,6 +43,12 @@ opentelemetry:
   sdk:
     enabled: true
 
+#logging:
+#  level:
+    #io.opentelemetry.exporter.logging: DEBUG
+    #org.springframework.web: DEBUG
+
+# Переходим на Logback с JSON форматом логов
 logging:
   level:
     io.opentelemetry.exporter.logging: DEBUG
@@ -54,5 +60,5 @@ server:
 app:
   security:
     jwt-secret: c0382cfa-92ca-4c88-8c67-17f5e60dd71c
-    public-endpoints: "/users/register,/users/login"
+    public-endpoints: "/users/register,/users/login, /actuator/**"
     jwt-expiration: 3600

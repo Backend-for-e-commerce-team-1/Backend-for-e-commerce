@@ -21,6 +21,12 @@ opentelemetry:
   sdk:
     enabled: true
 
+#logging:
+#  level:
+#    io.opentelemetry.exporter.logging: DEBUG
+#    org.springframework.web: DEBUG
+
+# Переходим на Logback с JSON форматом логов
 logging:
   level:
     io.opentelemetry.exporter.logging: DEBUG
