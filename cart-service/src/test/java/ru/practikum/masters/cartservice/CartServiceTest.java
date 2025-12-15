@@ -84,5 +84,25 @@ class CartServiceTest {
 
         verify(cartMapper, times(1)).toCartResponse(any(Cart.class), any());
     }
+
+    @Test
+    void clearCart_shouldBeUseSecurityContextService() {
+
+        var userId = UUID.randomUUID();
+        when(securityContextService.getCurrentUserId()).thenReturn(userId);
+
+        cartService.clearCart();
+
+        verify(securityContextService, times(1)).getCurrentUserId();
+        verify(cartRepository, times(1)).deleteByUserId(userId);
+    }
+
+    @Test
+    void clearCart_shouldBeSaveNewCartAutoClear() {
+
+        cartService.clearCart();
+
+        verify(cartRepository, times(1)).save(any(Cart.class));
+    }
 }
 

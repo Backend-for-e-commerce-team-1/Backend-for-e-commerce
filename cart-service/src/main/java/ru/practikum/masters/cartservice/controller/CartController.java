@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practikum.masters.cartservice.dto.*;
 import ru.practikum.masters.cartservice.service.CartService;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/cart")
@@ -21,5 +23,19 @@ public class CartController {
         CartResponse response = cartService.getCart();
         log.info("Получено текущее состояние корзины {}.", response);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping()
+    public ResponseEntity<CartResponse> clearCart() {
+        log.info("Поступил запрос на очистку корзины пользователя.");
+        CartResponse response = cartService.clearCart();
+        log.info("Корзина пользователя успешно очищена.");
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("int/{userId}")
+    public ClearCartResponse clearCartForUser(@PathVariable UUID userId) {
+        log.info("Поступила команда на удаление пользователя, userId:" + userId);
+        return cartService.clearCartForUser(userId);
     }
 }

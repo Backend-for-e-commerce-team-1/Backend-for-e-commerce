@@ -3,6 +3,7 @@ package ru.practikum.masters.cartservice.service;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.masters.securitylib.service.SecurityContextService;
@@ -25,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final SecurityContextService securityContextService;
 
     @Transactional(readOnly = true)
+    @Override
     public CartResponse getCart() {
 
         //Получить userId из SecurityContext
@@ -41,5 +43,35 @@ public class CartServiceImpl implements CartService {
         // Маппинг Cart -> CartResponse
         return cartMapper.toCartResponse(cart, cart.getItems().values().stream().toList());
     }
+
+    @Override
+    public CartResponse clearCart() {
+
+        //Получить userId из SecurityContext
+        UUID userId = securityContextService.getCurrentUserId();
+
+        // Удалить корзину из Redis
+        clearCartForUser(userId);
+
+        // После очистки GET /cart возвращает пустую корзину
+        var cart = new Cart(userId);
+        cartRepository.save(cart);
+
+        // Маппинг Cart -> CartResponse
+        return cartMapper.toCartResponse(cart, cart.getItems().values().stream().toList());
+    }
+
+    // Реализовать метод для внутреннего использования (будет вызываться из ORDER сервиса)
+    @Override
+    public ClearCartResponse clearCartForUser(UUID userId) {
+        try {
+            cartRepository.deleteByUserId(userId);
+            return new ClearCartResponse();
+        } catch (Exception e) {
+            return new ClearCartResponse(e.getMessage());
+        }
+    }
+
+
 }
 
