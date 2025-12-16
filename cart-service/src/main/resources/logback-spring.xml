@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="app_name" source="spring.application.name"/>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Базовые поля которые будут в каждом логе -->
+            <customFields>{"app":"${app_name:-cart-service}","env":"${spring.profiles.active:-local}"}</customFields>
+        </encoder>
+    </appender>
+
+    <!-- Указываем root логгеру использовать наш JSON аппендер -->
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+
+</configuration>

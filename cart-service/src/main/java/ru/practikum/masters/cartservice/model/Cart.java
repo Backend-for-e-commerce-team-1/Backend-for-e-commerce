@@ -8,8 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,4 +30,8 @@ public class Cart {
                 .sum();
     }
 
+    public Cart(UUID userId) {
+        this.id = UUID.randomUUID();
+        this.userId = userId;
+    }
 }

@@ -54,5 +54,5 @@ server:
 app:
   security:
     jwt-secret: c0382cfa-92ca-4c88-8c67-17f5e60dd71c
-    public-endpoints: "/users/register,/users/login"
+    public-endpoints: "/users/register,/users/login, /actuator/**"
     jwt-expiration: 3600
