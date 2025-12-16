@@ -37,6 +37,11 @@ spring:
       time-to-live: 3600000
       cache-null-values: false
       use-key-prefix: true
+  liquibase:
+    change-log: classpath:/db/changelog/001-create-tables.xml
+    enabled: true
+    drop-first: false
+
 management:
   tracing:
     sampling:
