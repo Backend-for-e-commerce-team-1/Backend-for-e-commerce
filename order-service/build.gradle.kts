@@ -41,6 +41,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-exporter-logging")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.micrometer:micrometer-observation")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

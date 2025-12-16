@@ -47,7 +47,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,prometheus
+        include: health,prometheus, metrics, info
   metrics:
     distribution:
       percentiles-histogram:
@@ -70,4 +70,3 @@ logging:
   level:
     io.opentelemetry.exporter.logging: DEBUG
     org.springframework.web: DEBUG
-    org.springframework.data.redis: DEBUG
