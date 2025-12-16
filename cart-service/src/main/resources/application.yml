@@ -21,12 +21,6 @@ app:
     jwt-expiration: 3600
     public-endpoints: "/actuator/health,/actuator/info, /actuator/**"
 
-#logging:
-#  level:
-#    org.springframework: INFO
-#    ru.practikum.masters.cartservice: DEBUG
-
-# Переходим на Logback с JSON форматом логов
 logging:
   level:
     io.opentelemetry.exporter.logging: DEBUG
