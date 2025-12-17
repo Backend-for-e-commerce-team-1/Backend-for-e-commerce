@@ -113,8 +113,9 @@ services:
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
-      timeout: 5s
-      retries: 3
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   cart-service:
     build: cart-service
