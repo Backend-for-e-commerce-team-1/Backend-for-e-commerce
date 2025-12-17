@@ -13,7 +13,9 @@ import ru.practikum.masters.cartservice.model.Cart;
 import ru.practikum.masters.cartservice.model.CartItem;
 import ru.practikum.masters.cartservice.repository.CartRepository;
 import ru.practikum.masters.cartservice.service.CartServiceImpl;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -117,5 +119,92 @@ class CartServiceTest {
         cartService.getCart();
 
         verify(cartMapper).toCartResponse(eq(cart), eq(Collections.emptyList()));
+    }
+
+    @Test
+    void removeFromCart_shouldBeRemoveItemWhenExists() {
+        // given
+        var userId = UUID.randomUUID();
+        var itemId = UUID.randomUUID();
+        var productId = UUID.randomUUID();
+
+        var cart = new Cart(userId);
+        var cartItem = new CartItem(itemId, productId, "Test", 100.0, 2);
+        cart.getItems().put(itemId, cartItem);
+
+        when(securityContextService.getCurrentUserId()).thenReturn(userId);
+        when(cartRepository.findByUserId(userId)).thenReturn(cart);
+
+        // when
+        var response = cartService.removeFromCart(itemId);
+
+        // then
+        assertThat(response.getMessage()).isEqualTo("Item removed successfully");
+        verify(cartRepository).save(argThat(c ->
+                !c.getItems().containsKey(itemId) &&
+                        c.getUserId().equals(userId)
+        ));
+    }
+
+    @Test
+    void removeFromCart_shouldBeReturnNotFoundWhenItemNotInCart() {
+        // given
+        var userId = UUID.randomUUID();
+        var itemId = UUID.randomUUID();
+
+        var cart = new Cart(userId);
+
+        when(securityContextService.getCurrentUserId()).thenReturn(userId);
+        when(cartRepository.findByUserId(userId)).thenReturn(cart);
+
+        // when
+        var response = cartService.removeFromCart(itemId);
+
+        // then
+        assertThat(response.getMessage()).isEqualTo("Item not found in cart");
+        verify(cartRepository, never()).save(any());
+    }
+
+    @Test
+    void removeFromCart_shouldBeReturnNotFoundWhenCartNotExists() {
+        // given
+        var userId = UUID.randomUUID();
+        var itemId = UUID.randomUUID();
+
+        when(securityContextService.getCurrentUserId()).thenReturn(userId);
+        when(cartRepository.findByUserId(userId)).thenReturn(null);
+
+        // when
+        var response = cartService.removeFromCart(itemId);
+
+        // then
+        assertThat(response.getMessage()).isEqualTo("Cart not found for user");
+        verify(cartRepository, never()).save(any());
+    }
+
+    @Test
+    void removeFromCart_shouldBeUpdateLastUpdatedTimestamp() {
+        // given
+        var userId = UUID.randomUUID();
+        var itemId = UUID.randomUUID();
+        var productId = UUID.randomUUID();
+
+        var cart = new Cart(userId);
+        var cartItem = new CartItem(itemId, productId, "Test", 100.0, 1);
+        cart.getItems().put(itemId, cartItem);
+
+        var beforeTime = LocalDateTime.now().minusSeconds(1);
+
+        when(securityContextService.getCurrentUserId()).thenReturn(userId);
+        when(cartRepository.findByUserId(userId)).thenReturn(cart);
+
+        // when
+        cartService.removeFromCart(itemId);
+
+        // then
+        verify(cartRepository).save(argThat(c ->
+                c.getLastUpdated() != null &&
+                        c.getLastUpdated().isAfter(beforeTime)
+        ));
     }
 }
