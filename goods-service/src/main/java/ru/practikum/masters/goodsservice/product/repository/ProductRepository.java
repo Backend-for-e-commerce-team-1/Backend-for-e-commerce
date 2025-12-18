@@ -6,8 +6,8 @@ import org.springframework.stereotype.Repository;
 import ru.practikum.masters.goodsservice.brand.model.Brand;
 import ru.practikum.masters.goodsservice.product.model.Product;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -21,7 +21,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
 
     List<Product> findByBrand(Brand brand);
 
-    List<Product> findByCode(String code);
-
-    List<Product> findByPriceLessThanEqual(BigDecimal maxPrice);
+    Optional<Product> findByCode(String code);
 }

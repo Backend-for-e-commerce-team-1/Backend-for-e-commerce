@@ -38,9 +38,8 @@ spring:
       cache-null-values: false
       use-key-prefix: true
   liquibase:
-    change-log: classpath:/db/changelog/001-create-tables.xml
+    change-log: classpath:/db/changelog/changelog-master.xml
     enabled: true
-    drop-first: false
 
 management:
   tracing:
