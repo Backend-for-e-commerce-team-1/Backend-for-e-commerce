@@ -11,4 +11,6 @@ public interface CartService {
     CartResponse clearCart();
 
     ClearCartResponse clearCartForUser(UUID userId);
+
+    RemoveFromCartResponse removeFromCart(UUID itemId);
 }

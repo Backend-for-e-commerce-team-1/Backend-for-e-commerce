@@ -2,6 +2,7 @@ package ru.practikum.masters.cartservice.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practikum.masters.cartservice.dto.*;
@@ -37,5 +38,22 @@ public class CartController {
     public ClearCartResponse clearCartForUser(@PathVariable UUID userId) {
         log.info("Поступила команда на удаление пользователя, userId:" + userId);
         return cartService.clearCartForUser(userId);
+    }
+
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<RemoveFromCartResponse> removeItemFromCart(
+            @PathVariable UUID itemId) {
+
+        log.info("DELETE /cart/items/{} - removing item from cart", itemId);
+
+        RemoveFromCartResponse response = cartService.removeFromCart(itemId);
+
+        if (response.getMessage().contains("not found")) {
+            log.warn("Item {} not found in cart", itemId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        log.info("Item {} successfully removed from cart", itemId);
+        return ResponseEntity.ok(response);
     }
 }

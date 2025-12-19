@@ -12,6 +12,7 @@ import ru.practikum.masters.cartservice.mapper.CartMapper;
 import ru.practikum.masters.cartservice.model.Cart;
 import ru.practikum.masters.cartservice.repository.CartRepository;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -72,6 +73,29 @@ public class CartServiceImpl implements CartService {
         }
     }
 
+    @Override
+    public RemoveFromCartResponse removeFromCart(UUID itemId) {
+        UUID userId = securityContextService.getCurrentUserId();
 
+        Cart cart = cartRepository.findByUserId(userId);
+        if (cart == null) {
+            log.warn("Cart not found for user {}", userId);
+            return new RemoveFromCartResponse("Cart not found for user");
+        }
+
+        if (!cart.getItems().containsKey(itemId)) {
+            log.warn("Item {} not found in cart for user {}", itemId, userId);
+            return new RemoveFromCartResponse("Item not found in cart");
+        }
+
+        cart.getItems().remove(itemId);
+        log.info("Item {} removed from cart for user {}", itemId, userId);
+
+        cart.setLastUpdated(LocalDateTime.now());
+
+        cartRepository.save(cart);
+
+        return new RemoveFromCartResponse("Item removed successfully");
+    }
 }
 
