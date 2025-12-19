@@ -3,7 +3,7 @@ spring:
     name: cart-service
   data:
     redis:
-      host: redis
+      host: localhost
       port: 6379
 
 server:

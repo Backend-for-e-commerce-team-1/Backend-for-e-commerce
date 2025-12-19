@@ -75,32 +75,24 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public RemoveFromCartResponse removeFromCart(UUID itemId) {
-        log.info("Removing item {} from cart", itemId);
-
-        // 1. Получить userId из SecurityContext
         UUID userId = securityContextService.getCurrentUserId();
 
-        // 2. Получить корзину
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
             log.warn("Cart not found for user {}", userId);
             return new RemoveFromCartResponse("Cart not found for user");
         }
 
-        // 3. Проверить существует ли товар в корзине
         if (!cart.getItems().containsKey(itemId)) {
             log.warn("Item {} not found in cart for user {}", itemId, userId);
             return new RemoveFromCartResponse("Item not found in cart");
         }
 
-        // 4. Удалить товар из корзины
         cart.getItems().remove(itemId);
         log.info("Item {} removed from cart for user {}", itemId, userId);
 
-        // 5. Обновить дату изменения
         cart.setLastUpdated(LocalDateTime.now());
 
-        // 6. Сохранить обновленную корзину
         cartRepository.save(cart);
 
         return new RemoveFromCartResponse("Item removed successfully");
