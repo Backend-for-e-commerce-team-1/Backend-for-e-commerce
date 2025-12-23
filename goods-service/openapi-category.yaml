@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: Goods Service API
+  version: 1.0.0
+  description: API для управления категориями
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+  - url: https://api.example.com
+    description: Продуктивный сервер
+
+tags:
+  - name: Category Controller
+    description: Управление категориями товаров
+
+paths:
+  /categories:
+    post:
+      tags:
+        - Category Controller
+      summary: Создание новой категории
+      description: Создает новую категорию товаров в системе
+      operationId: createCategory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '201':
+          description: Категория успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Невалидные данные запроса
+        '409':
+          description: Категория с таким названием уже существует
+
+    get:
+      tags:
+        - Category Controller
+      summary: Получение списка категорий
+      description: Возвращает список категорий с пагинацией
+      operationId: listCategories
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Количество элементов на странице
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список категорий успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CategoryResponse'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  size:
+                    type: integer
+                  number:
+                    type: integer
+
+  /categories/{id}:
+    get:
+      tags:
+        - Category Controller
+      summary: Получение категории по ID
+      description: Возвращает информацию о конкретной категории
+      operationId: getCategory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID категории
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Категория найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '404':
+          description: Категория не найден
+
+    put:
+      tags:
+        - Category Controller
+      summary: Обновление категории
+      description: Обновляет информацию о существующей категории
+      operationId: updateCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID категории для обновления
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: Категория успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Невалидные данные запроса
+        '404':
+          description: Категория не найдена
+        '409':
+          description: Категория с таким названием уже существует
+
+    delete:
+      tags:
+        - Category Controller
+      summary: Удаление категории
+      description: Удаляет категорию из системы по ID
+      operationId: deleteCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID категории для удаления
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '204':
+          description: Категория успешно удалена
+        '404':
+          description: Категория не найдена
+        '409':
+          description: Нельзя удалить категорию, так как существуют связанные товары
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CategoryRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Название категории
+          example: Смартфоны
+          minLength: 1
+          maxLength: 255
+
+    CategoryResponse:
+      type: object
+      required:
+        - category_id
+        - name
+      properties:
+        category_id:
+          type: string
+          description: Уникальный идентификатор категории
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        name:
+          type: string
+          description: Название категории
+          example: Смартфоны
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP статус код
+          example: 400
+        error:
+          type: string
+          description: Тип ошибки
+          example: Bad Request
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: Невалидные данные запроса
+        timestamp:
+          type: string
+          description: Время возникновения ошибки
+          example: '2024-01-15T14:30:00Z'
+          format: date-time
+        path:
+          type: string
+          description: Путь запроса
+          example: /categories
