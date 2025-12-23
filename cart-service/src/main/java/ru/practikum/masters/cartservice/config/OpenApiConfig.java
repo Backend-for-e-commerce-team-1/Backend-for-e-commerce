@@ -1,4 +1,4 @@
-package ru.practikum.masters.authservice.config;
+package ru.practikum.masters.cartservice.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -10,9 +10,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
-                title = "Authentication Service API",
+                title = "Cart Service API",
                 version = "1.0",
-                description = "Микросервис для аутентификации и управления пользователями",
+                description = "Микросервис Корзина покупок",
                 contact = @Contact(
                         name = "Разработчик",
                         email = "dev@example.com"

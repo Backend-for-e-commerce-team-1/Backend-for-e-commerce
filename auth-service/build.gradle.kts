@@ -59,6 +59,7 @@ dependencies {
 	implementation("io.micrometer:micrometer-tracing-bridge-otel")
 	implementation("io.micrometer:micrometer-observation")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
   implementation("org.liquibase:liquibase-core")
 	implementation(project(":security-lib"))
