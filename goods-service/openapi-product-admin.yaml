@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: Goods Service API
+  version: 1.0.0
+  description: API для управления товарами, брендами и категориями
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+  - url: https://api.example.com
+    description: Продуктивный сервер
+
+tags:
+  - name: Admin Product Controller
+    description: Административное управление товарами
+
+paths:
+  /admin/products:
+    post:
+      tags:
+        - Admin Product Controller
+      summary: Создание нового товара
+      description: Создает новый товар в системе. Доступно только администраторам.
+      operationId: createProduct
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        '201':
+          description: Товар успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreateResponse'
+        '400':
+          description: Невалидные данные запроса
+        '401':
+          description: Требуется авторизация
+        '403':
+          description: Доступ запрещен (требуются права администратора)
+        '404':
+          description: Категория или бренд не найдены
+        '409':
+          description: Товар с таким названием уже существует
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ProductRequest:
+      type: object
+      required:
+        - name
+        - price
+      properties:
+        name:
+          type: string
+          description: Название товара
+          example: Смартфон Samsung Galaxy S23
+          minLength: 1
+          maxLength: 255
+        code:
+          type: string
+          description: Артикул товара
+          example: SM-S23-BLK-256
+          maxLength: 100
+        description:
+          type: string
+          description: Описание товара
+          example: Флагманский смартфон с процессором Snapdragon 8 Gen 2
+        price:
+          type: number
+          description: Цена товара
+          example: 79999.99
+          format: float
+          minimum: 0.01
+        category_id:
+          type: string
+          description: Идентификатор категории
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        category_name:
+          type: string
+          description: Название категории
+          example: Смартфоны
+        brand_id:
+          type: string
+          description: Идентификатор бренда
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        brand_name:
+          type: string
+          description: Название бренда
+          example: Samsung
+        images:
+          type: array
+          description: Ссылки на изображения товара
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+
+    ProductCreateResponse:
+      type: object
+      required:
+        - product_id
+        - message
+      properties:
+        product_id:
+          type: string
+          description: Идентификатор созданного товара
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        message:
+          type: string
+          description: Сообщение о результате операции
+          example: Товар успешно создан

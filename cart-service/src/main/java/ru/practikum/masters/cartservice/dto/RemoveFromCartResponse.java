@@ -6,14 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Ответ после очистки корзины")
-public class ClearCartResponse {
+@AllArgsConstructor
+@Schema(description = "Ответ после удаления корзины")
+public class RemoveFromCartResponse {
 
     @Schema(
             description = "Сообщение о результате операции",
-            example = "Корзина успешно очищена"
+            example = "Корзина успешно удалена"
     )
     private String message;
 }

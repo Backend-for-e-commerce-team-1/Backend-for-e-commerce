@@ -1,0 +1,380 @@
+openapi: 3.0.3
+info:
+  title: Goods Service API
+  version: 1.0.0
+  description: API для управления товарами, брендами и категориями
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+  - url: https://api.example.com
+    description: Продуктивный сервер
+
+tags:
+  - name: Product Controller
+    description: Управление товарами
+
+paths:
+  /products:
+    get:
+      tags:
+        - Product Controller
+      summary: Получение списка товаров с фильтрацией
+      description: Возвращает список товаров с возможностью фильтрации по категориям, брендам и другим параметрам
+      operationId: getProducts
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: offset
+          in: query
+          description: Смещение от начала списка
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          description: Количество товаров на странице
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: Поле для сортировки
+          schema:
+            type: string
+            enum: [price, name, createdAt]
+        - name: category
+          in: query
+          description: Фильтр по категории
+          schema:
+            type: string
+        - name: price_min
+          in: query
+          description: Минимальная цена
+          schema:
+            type: number
+            format: float
+            minimum: 0
+        - name: price_max
+          in: query
+          description: Максимальная цена
+          schema:
+            type: number
+            format: float
+            minimum: 0
+        - name: brand
+          in: query
+          description: Фильтр по бренду
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список товаров успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '400':
+          description: Невалидные параметры фильтрации
+
+  /products/{id}:
+    get:
+      tags:
+        - Product Controller
+      summary: Получение детальной информации о товаре
+      description: Возвращает полную информацию о конкретном товаре по его идентификатору
+      operationId: getProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID товара
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetailResponse'
+        '404':
+          description: Товар не найден
+
+    delete:
+      tags:
+        - Product Controller
+      summary: Удаление товара
+      description: Удаляет товар из системы по его идентификатору
+      operationId: deleteProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID товара для удаления
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '204':
+          description: Товар успешно удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDeleteResponse'
+        '401':
+          description: Требуется авторизация
+        '403':
+          description: Доступ запрещен (требуются права администратора)
+        '404':
+          description: Товар не найден
+        '409':
+          description: Нельзя удалить товар, так как он присутствует в заказах
+
+  /products/search:
+    get:
+      tags:
+        - Product Controller
+      summary: Поиск товаров
+      description: Выполняет поиск товаров по названию и описанию
+      operationId: searchProducts
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Поисковый запрос
+          schema:
+            type: string
+            example: Samsung Galaxy
+        - name: fields
+          in: query
+          required: true
+          description: Поля для поиска
+          schema:
+            type: array
+            items:
+              type: string
+            minItems: 1
+            example: [name, description]
+        - name: page
+          in: query
+          description: Номер страницы
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Количество товаров на странице
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: Поле для сортировки
+          schema:
+            type: string
+            enum: [price, name, createdAt]
+        - name: category
+          in: query
+          description: Фильтр по категории
+          schema:
+            type: string
+        - name: price_min
+          in: query
+          description: Минимальная цена
+          schema:
+            type: number
+            format: float
+            minimum: 0
+        - name: price_max
+          in: query
+          description: Максимальная цена
+          schema:
+            type: number
+            format: float
+            minimum: 0
+        - name: brand
+          in: query
+          description: Фильтр по бренду
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Результаты поиска успешно получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '400':
+          description: Невалидные параметры поиска
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ProductListResponse:
+      type: object
+      required:
+        - products
+        - pagination
+      properties:
+        products:
+          type: array
+          description: Список товаров
+          items:
+            $ref: '#/components/schemas/ProductResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PaginationInfo:
+      type: object
+      required:
+        - current_page
+        - total_pages
+        - total_items
+      properties:
+        current_page:
+          type: integer
+          description: Текущая страница
+          example: 1
+        total_pages:
+          type: integer
+          description: Общее количество страниц
+          example: 5
+        total_items:
+          type: integer
+          description: Общее количество товаров
+          example: 100
+
+    ProductDetailResponse:
+      type: object
+      required:
+        - product_id
+        - code
+        - name
+        - price
+        - category
+        - brand
+      properties:
+        product_id:
+          type: string
+          description: Идентификатор товара
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        code:
+          type: string
+          description: Артикул товара
+          example: SM-S23-BLK-256
+        name:
+          type: string
+          description: Название товара
+          example: Смартфон Samsung Galaxy S23
+        description:
+          type: string
+          description: Описание товара
+          example: Флагманский смартфон с процессором Snapdragon 8 Gen 2
+        price:
+          type: number
+          description: Цена товара
+          example: 79999.99
+          format: float
+        category:
+          type: string
+          description: Название категории товара
+          example: Смартфоны
+        brand:
+          type: string
+          description: Название бренда товара
+          example: Samsung
+        images:
+          type: array
+          description: Ссылки на изображения товара
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+
+    ProductResponse:
+      type: object
+      required:
+        - product_id
+        - code
+        - name
+        - price
+        - category
+        - brand
+      properties:
+        product_id:
+          type: string
+          description: Идентификатор товара
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        code:
+          type: string
+          description: Артикул товара
+          example: SM-S23-BLK-256
+        name:
+          type: string
+          description: Название товара
+          example: Смартфон Samsung Galaxy S23
+        price:
+          type: number
+          description: Цена товара
+          example: 79999.99
+          format: float
+        category:
+          type: string
+          description: Название категории
+          example: Смартфоны
+        brand:
+          type: string
+          description: Название бренда
+          example: Samsung
+        images:
+          type: array
+          description: Ссылки на изображения товара
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+
+    ProductDeleteResponse:
+      type: object
+      required:
+        - message
+        - status
+        - id
+      properties:
+        message:
+          type: string
+          description: Сообщение о результате операции
+          example: Товар успешно удален
+        status:
+          type: string
+          description: Статус операции
+          example: SUCCESS
+        id:
+          type: string
+          description: Идентификатор удаленного товара
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
