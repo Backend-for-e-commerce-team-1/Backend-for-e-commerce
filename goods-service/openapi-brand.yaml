@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: Goods Service API
+  version: 1.0.0
+  description: API для управления брендами
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+  - url: https://api.example.com
+    description: Продуктивный сервер
+
+tags:
+  - name: Brand Controller
+    description: Управление брендами товаров
+
+paths:
+  /brands:
+    post:
+      tags:
+        - Brand Controller
+      summary: Создание нового бренда
+      description: Создает новый бренд в системе
+      operationId: createBrand
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrandRequest'
+      responses:
+        '201':
+          description: Бренд успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Невалидные данные запроса
+        '409':
+          description: Бренд с таким названием уже существует
+
+    get:
+      tags:
+        - Brand Controller
+      summary: Получение списка брендов
+      description: Возвращает список брендов с пагинацией
+      operationId: listBrands
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Количество элементов на странице
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список брендов успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BrandResponse'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  size:
+                    type: integer
+                  number:
+                    type: integer
+
+  /brands/{id}:
+    get:
+      tags:
+        - Brand Controller
+      summary: Получение бренда по ID
+      description: Возвращает информацию о конкретном бренде
+      operationId: getBrand
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID бренда
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Бренд найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '404':
+          description: Бренд не найден
+
+    put:
+      tags:
+        - Brand Controller
+      summary: Обновление бренда
+      description: Обновляет информацию о существующем бренде
+      operationId: updateBrand
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID бренда для обновления
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrandRequest'
+      responses:
+        '200':
+          description: Бренд успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResponse'
+        '400':
+          description: Невалидные данные запроса
+        '404':
+          description: Бренд не найден
+        '409':
+          description: Бренд с таким названием уже существует
+
+    delete:
+      tags:
+        - Brand Controller
+      summary: Удаление бренда
+      description: Удаляет бренд из системы по ID
+      operationId: deleteBrand
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID бренда для удаления
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '204':
+          description: Бренд успешно удален
+        '404':
+          description: Бренд не найден
+        '409':
+          description: Нельзя удалить бренд, так как существуют связанные товары
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    BrandRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Название бренда
+          example: Samsung
+          minLength: 1
+          maxLength: 255
+
+    BrandResponse:
+      type: object
+      required:
+        - brand_id
+        - name
+      properties:
+        brand_id:
+          type: string
+          description: Уникальный идентификатор бренда
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        name:
+          type: string
+          description: Название бренда
+          example: Samsung
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP статус код
+          example: 400
+        error:
+          type: string
+          description: Тип ошибки
+          example: Bad Request
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: Невалидные данные запроса
+        timestamp:
+          type: string
+          description: Время возникновения ошибки
+          example: '2024-01-15T14:30:00Z'
+          format: date-time
+        path:
+          type: string
+          description: Путь запроса
+          example: /brands

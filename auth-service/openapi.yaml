@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: Authentication Service API
+  version: 1.0.0
+  description: API для регистрации, аутентификации и управления профилями пользователей
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+  - url: https://api.example.com
+    description: Продуктивный сервер
+
+tags:
+  - name: Authentication Controller
+    description: API для регистрации, аутентификации и управления профилями пользователей
+
+paths:
+  /users/register:
+    post:
+      tags:
+        - Authentication Controller
+      summary: Регистрация нового пользователя
+      description: Создает нового пользователя в системе. Возвращает данные зарегистрированного пользователя.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Невалидные данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Пользователь с таким email уже существует
+
+  /users/login:
+    post:
+      tags:
+        - Authentication Controller
+      summary: Аутентификация пользователя
+      description: Авторизует пользователя по email и паролю. Возвращает JWT токен.
+      operationId: authUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Невалидные данные запроса
+        '401':
+          description: Неверные учетные данные
+
+  /users/profile:
+    get:
+      tags:
+        - Authentication Controller
+      summary: Получение профиля пользователя
+      description: Возвращает профиль текущего аутентифицированного пользователя по JWT токену.
+      operationId: getUserProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: JWT токен в формате Bearer {token}
+          schema:
+            type: string
+            example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Профиль пользователя успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: Требуется авторизация
+        '404':
+          description: Пользователь не найден
+
+    put:
+      tags:
+        - Authentication Controller
+      summary: Обновление профиля пользователя
+      description: Обновляет данные профиля текущего аутентифицированного пользователя.
+      operationId: updateUserProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: JWT токен в формате Bearer {token}
+          schema:
+            type: string
+            example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Профиль успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserResponseDto'
+        '400':
+          description: Невалидные данные
+        '401':
+          description: Требуется авторизация
+        '404':
+          description: Пользователь не найден
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          description: Имя пользователя (логин)
+          example: ivan_ivanov
+          minLength: 2
+          maxLength: 50
+        email:
+          type: string
+          description: Email пользователя
+          example: ivan.ivanov@example.com
+          minLength: 6
+          maxLength: 255
+          format: email
+        password:
+          type: string
+          description: Пароль пользователя
+          example: MySecurePass123!
+          minLength: 8
+          maxLength: 255
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          description: Email пользователя
+          example: user@example.com
+          minLength: 6
+          maxLength: 255
+          format: email
+        password:
+          type: string
+          description: Пароль пользователя
+          example: mySecurePassword123
+          minLength: 8
+          maxLength: 255
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Новое имя пользователя (логин)
+          example: new_username
+          minLength: 2
+          maxLength: 50
+        email:
+          type: string
+          description: Новый email пользователя
+          example: new.email@example.com
+          minLength: 6
+          maxLength: 255
+          format: email
+
+    RegisterResponse:
+      type: object
+      required:
+        - user_id
+        - username
+        - email
+        - created_at
+      properties:
+        user_id:
+          type: string
+          description: Уникальный идентификатор пользователя
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+        username:
+          type: string
+          description: Имя пользователя (логин)
+          example: john_doe
+        email:
+          type: string
+          description: Электронная почта пользователя
+          example: john.doe@example.com
+          format: email
+        created_at:
+          type: string
+          description: Дата и время создания учетной записи пользователя
+          example: 2024-01-15 14:30:00
+          pattern: '^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$'
+
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - expires_in
+      properties:
+        token:
+          type: string
+          description: JWT токен доступа
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expires_in:
+          type: integer
+          description: Время жизни токена в секундах
+          example: 3600
+          minimum: 1
+
+    UserProfileResponse:
+      type: object
+      required:
+        - user_id
+        - username
+        - email
+        - created_at
+      properties:
+        user_id:
+          type: string
+          description: Уникальный идентификатор пользователя
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        username:
+          type: string
+          description: Имя пользователя (логин)
+          example: john_doe
+          minLength: 2
+          maxLength: 50
+        email:
+          type: string
+          description: Электронная почта пользователя
+          example: john.doe@example.com
+          format: email
+          maxLength: 255
+        created_at:
+          type: string
+          description: Дата и время регистрации пользователя в системе
+          example: 2024-01-15 14:30:00
+          pattern: '^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$'
+          format: date-time
+
+    UpdateUserResponseDto:
+      type: object
+      required:
+        - user_id
+        - username
+        - email
+        - updated_at
+      properties:
+        user_id:
+          type: string
+          description: Уникальный идентификатор пользователя
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+        username:
+          type: string
+          description: Обновленное имя пользователя
+          example: new_username
+        email:
+          type: string
+          description: Обновленный email пользователя
+          example: new.email@example.com
+          format: email
+        updated_at:
+          type: string
+          description: Дата и время последнего обновления профиля
+          example: 2024-01-15 15:45:30
+          pattern: '^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$'
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP статус код
+          example: 400
+        error:
+          type: string
+          description: Тип ошибки
+          example: Bad Request
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: Невалидные данные пользователя
+        timestamp:
+          type: string
+          description: Время возникновения ошибки
+          example: 2024-01-15T14:30:00Z
+          format: date-time
+        path:
+          type: string
+          description: Путь запроса
+          example: /users/register

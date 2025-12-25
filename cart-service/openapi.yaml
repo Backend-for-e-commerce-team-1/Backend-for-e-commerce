@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: Cart Service API
+  version: 1.0.0
+  description: API для управления корзиной покупок пользователя
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+  - url: https://api.example.com
+    description: Продуктивный сервер
+
+tags:
+  - name: Cart Controller
+    description: Управление корзиной покупок пользователя. Позволяет добавлять, удалять и изменять товары в корзине.
+
+paths:
+  /cart:
+    get:
+      tags:
+        - Cart Controller
+      summary: Просмотр содержимого корзины
+      description: Возвращает текущее состояние корзины пользователя со всеми товарами, их количеством и общей стоимостью.
+      operationId: getCart
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Корзина успешно получена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '401':
+          description: Требуется авторизация
+        '404':
+          description: Корзина не найдена или пользователь не авторизован
+
+    delete:
+      tags:
+        - Cart Controller
+      summary: Очистка корзины
+      description: Полностью очищает корзину текущего пользователя, удаляя все товары.
+      operationId: clearCart
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Корзина успешно очищена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '401':
+          description: Требуется авторизация
+        '404':
+          description: Корзина не найдена
+
+  /cart/int/{userId}:
+    delete:
+      tags:
+        - Cart Controller
+      summary: Очистка корзины пользователя (административный)
+      description: Полностью очищает корзину указанного пользователя. Доступно только администраторам.
+      operationId: clearCartForUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: UUID пользователя, чью корзину нужно очистить
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Корзина пользователя успешно очищена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearCartResponse'
+        '401':
+          description: Требуется авторизация
+        '403':
+          description: Доступ запрещен (требуются права администратора)
+        '404':
+          description: Пользователь не найден
+
+  /cart/items/{itemId}:
+    delete:
+      tags:
+        - Cart Controller
+      summary: Удаление товара из корзины
+      description: Удаляет конкретный товар из корзины пользователя по его идентификатору.
+      operationId: removeItemFromCart
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: UUID товара для удаления из корзины
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Товар успешно удален из корзины
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveFromCartResponse'
+        '401':
+          description: Требуется авторизация
+        '404':
+          description: Товар не найден в корзине
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CartResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          description: Список товаров в корзине
+          items:
+            $ref: '#/components/schemas/CartItemDTO'
+        total_amount:
+          type: number
+          description: Общая сумма корзины
+          example: 159999.98
+          format: double
+
+    CartItemDTO:
+      type: object
+      required:
+        - item_id
+        - product_id
+        - quantity
+      properties:
+        item_id:
+          type: string
+          description: Идентификатор элемента в корзине
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+        product_id:
+          type: string
+          description: Идентификатор товара
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+        name:
+          type: string
+          description: Название товара
+          example: Смартфон Samsung Galaxy S23
+        quantity:
+          type: integer
+          description: Количество товара
+          example: 2
+          minimum: 1
+        price:
+          type: number
+          description: Цена за единицу товара
+          example: 79999.99
+          format: double
+        total_price:
+          type: number
+          description: Общая стоимость позиции
+          example: 159999.98
+          format: double
+
+    ClearCartResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Сообщение о результате операции
+          example: Корзина успешно очищена
+
+    RemoveFromCartResponse:
+      type: object
+      required:
+        - message
+        - status
+      properties:
+        message:
+          type: string
+          description: Сообщение о результате операции
+          example: Товар успешно удален из корзины
+        status:
+          type: string
+          description: Статус операции
+          example: SUCCESS
+        item_id:
+          type: string
+          description: Идентификатор удаленного товара
+          example: 123e4567-e89b-12d3-a456-426614174000
+          format: uuid
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP статус код
+          example: 400
+        error:
+          type: string
+          description: Тип ошибки
+          example: Bad Request
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: Невалидные данные
+        timestamp:
+          type: string
+          description: Время возникновения ошибки
+          example: 2024-01-15T14:30:00Z
+          format: date-time
+        path:
+          type: string
+          description: Путь запроса
+          example: /cart
