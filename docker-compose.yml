@@ -103,18 +103,6 @@ services:
     volumes:
       - pgdata_goods:/var/lib/postgresql/data
 
-#  liquibase:
-#    image: liquibase/liquibase:4.29.2
-#    container_name: liquibase
-#    # network_mode: 'host'
-#    networks:
-#      - monitoring
-#    depends_on:
-#      - goods-db
-#    command: bash -c 'while !</dev/tcp/goods-db/5432; do sleep 1; done; liquibase --defaultsFile=/liquibase/db/liquibase.properties update'
-#    volumes:
-#      - ./goods-service/src/main/resources/db:/liquibase/db
-
   redis:
     image: redis:7-alpine
     container_name: cart-redis
