@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practikum.masters.goodsservice.category.CategoryController;
 import ru.practikum.masters.goodsservice.common.exception.ConflictException;
 import ru.practikum.masters.goodsservice.common.exception.NotFoundException;
 import ru.practikum.masters.goodsservice.category.dto.CategoryRequest;

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import ru.practikum.masters.cartservice.model.Cart;
@@ -68,7 +67,7 @@ class CartRepositoryTest {
     }
 
     @Test
-    void shouldReturnCartWhenExistsInRedis() throws Exception {
+    void shouldReturnCartWhenExistsInRedis() {
 
         // given
         when(valueOperations.get(expectedKey)).thenReturn(testCart);
