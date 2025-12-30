@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005" author="Svetlana Rozanova">
+
+        <!-- Создание таблицы product_reviews -->
+        <createTable tableName="product_reviews">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating" type="FLOAT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="VARCHAR(1024)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Индексы product_reviews -->
+        <createIndex tableName="product_reviews" indexName="idx_review_product">
+            <column name="product_id"/>
+        </createIndex>
+        <createIndex tableName="product_reviews" indexName="idx_review_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="product_reviews" indexName="idx_review_rating">
+            <column name="rating"/>
+        </createIndex>
+
+        <!-- Внешние ключи -->
+        <addForeignKeyConstraint
+                constraintName="fk_review_product"
+                baseTableName="product_reviews"
+                baseColumnNames="product_id"
+                referencedTableName="products"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+                onUpdate="CASCADE"/>
+
+        <rollback>
+            <!-- Удаляем FK сначала -->
+            <dropForeignKeyConstraint
+                    constraintName="fk_review_product"
+                    baseTableName="product_reviews"/>
+
+            <!-- Удаление таблицы product_reviews -->
+            <dropTable tableName="product_reviews"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

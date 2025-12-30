@@ -37,6 +37,10 @@ spring:
       time-to-live: 3600000
       cache-null-values: false
       use-key-prefix: true
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+    enabled: true
+
 management:
   tracing:
     sampling:

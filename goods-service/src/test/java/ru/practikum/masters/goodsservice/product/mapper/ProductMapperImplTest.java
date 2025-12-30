@@ -12,6 +12,7 @@ import ru.practikum.masters.goodsservice.product.dto.ProductListResponse;
 import ru.practikum.masters.goodsservice.product.dto.ProductRequest;
 import ru.practikum.masters.goodsservice.product.dto.ProductResponse;
 import ru.practikum.masters.goodsservice.product.model.Product;
+import ru.practikum.masters.goodsservice.product.model.ProductImage;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -82,7 +83,7 @@ class ProductMapperImplTest {
         assertThat(product.getPrice()).isEqualTo(BigDecimal.valueOf(799.50));
         assertThat(product.getCategory()).isSameAs(category);
         assertThat(product.getBrand()).isSameAs(brand);
-        assertThat(product.getImageUrls()).containsExactly("https://img/2.png");
+        assertThat(product.getImageUrls().stream().map(ProductImage::getImageUrl).toList()).containsExactly("https://img/2.png");
     }
 
     @Test

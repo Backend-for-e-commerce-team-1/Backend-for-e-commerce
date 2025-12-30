@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003" author="Svetlana Rozanova">
+
+        <!-- Создание таблицы products -->
+        <createTable tableName="products">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1024)"/>
+            <column name="price" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="brand_id" type="UUID"/>
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="stock_quantity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Индексы products -->
+        <createIndex tableName="products" indexName="idx_product_name">
+            <column name="product_name"/>
+        </createIndex>
+        <createIndex tableName="products" indexName="idx_product_category">
+            <column name="category_id"/>
+        </createIndex>
+        <createIndex tableName="products" indexName="idx_product_brand">
+            <column name="brand_id"/>
+        </createIndex>
+        <createIndex tableName="products" indexName="idx_product_code">
+            <column name="code"/>
+        </createIndex>
+        <createIndex tableName="products" indexName="idx_product_price">
+            <column name="price"/>
+        </createIndex>
+
+        <!-- Внешние ключи -->
+        <addForeignKeyConstraint
+                constraintName="fk_product_category"
+                baseTableName="products"
+                baseColumnNames="category_id"
+                referencedTableName="categories"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+                onUpdate="CASCADE"/>
+
+        <rollback>
+            <!-- Удаляем FK сначала -->
+            <dropForeignKeyConstraint
+                    constraintName="fk_product_category"
+                    baseTableName="products"/>
+
+            <!-- Удаление таблицы products -->
+            <dropTable tableName="products"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

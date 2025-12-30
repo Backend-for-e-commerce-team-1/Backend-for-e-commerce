@@ -48,12 +48,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'com.google.android.gms:play-services-analytics-impl:18.2.0'
     //implementation project(':security-lib')
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'com.h2database:h2'
-    compileOnly("org.projectlombok:lombok:1.18.36")
-    annotationProcessor("org.projectlombok:lombok:1.18.36")
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
     implementation 'io.opentelemetry:opentelemetry-api'
     implementation 'io.opentelemetry:opentelemetry-sdk'
     implementation 'io.opentelemetry:opentelemetry-exporter-logging'

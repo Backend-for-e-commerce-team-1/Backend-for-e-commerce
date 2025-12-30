@@ -1,4 +1,4 @@
-package ru.practikum.masters.goodsservice.category.controller;
+package ru.practikum.masters.goodsservice.category;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

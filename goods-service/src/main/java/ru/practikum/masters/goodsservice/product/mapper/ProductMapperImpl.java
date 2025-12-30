@@ -6,6 +6,7 @@ import ru.practikum.masters.goodsservice.brand.model.Brand;
 import ru.practikum.masters.goodsservice.category.model.Category;
 import ru.practikum.masters.goodsservice.product.dto.*;
 import ru.practikum.masters.goodsservice.product.model.Product;
+import ru.practikum.masters.goodsservice.product.model.ProductImage;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class ProductMapperImpl implements ProductMapper{
                     .price(entity.getPrice())
                     .category(entity.getCategory().getName())
                     .brand(entity.getBrand().getName())
-                    .images(entity.getImageUrls() != null ? entity.getImageUrls() : java.util.List.of())
+                    .images(entity.getImageUrls() != null ? entity.getImageUrls().stream().map(ProductImage::getImageUrl).toList() : java.util.List.of())
                     .build();
     }
 
@@ -35,7 +36,7 @@ public class ProductMapperImpl implements ProductMapper{
                     .price(entity.getPrice())
                     .category(entity.getCategory().getName())
                     .brand(entity.getBrand().getName())
-                    .images(entity.getImageUrls() != null ? entity.getImageUrls() : List.of())
+                    .images(entity.getImageUrls() != null ? entity.getImageUrls().stream().map(ProductImage::getImageUrl).toList() : List.of())
                     .build();
     }
 
